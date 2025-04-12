@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -72,12 +73,17 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: TextButton(
                       onPressed: (){},
-                      child:Text(
-                        'Google',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black54,
-                        ),
+                      child:Row(
+                        children: [
+                          Icon(FontAwesomeIcons.google),
+                          Text(
+                            'Google',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

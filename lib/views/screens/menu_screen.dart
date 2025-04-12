@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:word_search/constants.dart';
+import 'package:word_search/controllers/navigation_controller.dart';
+import 'package:get/get.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final NavigationController navigationController = Get.find<NavigationController>();
     return Scaffold(
       body: SafeArea(
           child: Container(
@@ -24,13 +27,11 @@ class MenuScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        CircleAvatar(
-                          child: Icon(Icons.account_circle),
-                        ),
+                        Icon(Icons.account_circle_rounded, color: Colors.white,size: 45, ),
                         Text('Hello Guest!', style: TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white
                         ),),
-                        Icon(Icons.logout)
+                        Icon(Icons.logout, size: 30,)
                       ],
                     ),
                   ),
@@ -76,9 +77,8 @@ class MenuScreen extends StatelessWidget {
                     child: TextButton(onPressed: (){}, child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Text('Leaderboards',style: TextStyle(fontSize: 20, color: Color(0xFFF8BD00)),),
-                        Icon(Icons.leaderboard),
-                        Icon(Icons.double_arrow_rounded),
+                        Text('Leaderboards',style: TextStyle(fontSize: 25, color: Color(0xFFF8BD00)),),
+                        Icon(Icons.leaderboard, color: Color(0xFFF8BD00), size: 25,),
                       ],
                     )),
                   ),
@@ -107,7 +107,9 @@ class MenuScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       color: Color(0xFFF8BD00),
                     ),
-                    child: TextButton(onPressed: (){},
+                    child: TextButton(onPressed: (){
+                      navigationController.navigateTo('/wordGameScreen');
+                    },
                         child: Text('New Game', style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)

@@ -1,7 +1,12 @@
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:word_search/controllers/navigation_controller.dart';
+import 'package:word_search/views/screens/home_screen.dart';
 import 'package:word_search/views/screens/menu_screen.dart';
+import 'package:word_search/views/screens/word_game_screen2.dart';
+import 'package:word_search/controllers/initial_bindings.dart';
 
 void main() {
   runApp(
@@ -13,6 +18,13 @@ void main() {
           error: Colors.red, // ✅ Define error color
         ),
       ),
+      initialBinding: InitialBindings(),
+      initialRoute: '/',
+      getPages: [
+        GetPage(name: '/', page: ()=> HomeScreen()),
+        GetPage(name: '/menuScreen', page: ()=> MenuScreen()),
+        GetPage(name: '/wordGameScreen', page: ()=> WordGameScreen()),
+      ],
       home: MenuScreen(),
     ),
   );
