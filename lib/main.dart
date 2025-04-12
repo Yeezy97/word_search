@@ -5,7 +5,7 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:word_search/controllers/navigation_controller.dart';
 import 'package:word_search/views/screens/home_screen.dart';
 import 'package:word_search/views/screens/menu_screen.dart';
-import 'package:word_search/views/screens/word_game_screen2.dart';
+import 'package:word_search/views/screens/word_game_screen.dart';
 import 'package:word_search/controllers/initial_bindings.dart';
 
 void main() {
