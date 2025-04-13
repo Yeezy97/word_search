@@ -4,17 +4,17 @@ import 'package:get/get.dart';
 
 class WordGameController extends GetxController {
   // The word to form.
-  final String word = 'Doctor';
+  final String word = 'طبيب';
 
   // Dimensions for the letter containers.
   final double containerHeight = 210;
   final double boxSize = 40; // smaller box size for both draggables & targets.
   final double containerPadding = 8.0;
 
-  // Reactive variables.
-  // Holds the random positions for each letter.
+  // Observable variables
+  // Holds the random positions for each letter
   RxList<Offset> letterPositions = <Offset>[].obs;
-  // Tracks if each letter has been placed (index-based).
+  // Tracks if each letter has been placed (index-based)
   RxList<bool> isLetterPlaced = RxList<bool>();
   // Contains the letters placed in the drop targets (null if not placed).
   RxList<String?> placedLetters = RxList<String?>();

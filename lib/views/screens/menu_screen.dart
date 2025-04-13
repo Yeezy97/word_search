@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:word_search/constants.dart';
 import 'package:word_search/controllers/navigation_controller.dart';
 import 'package:get/get.dart';
+import 'package:word_search/views/widgets/settings_widget.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -122,7 +123,9 @@ class MenuScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       color: Color(0xFFF8BD00),
                     ),
-                    child: TextButton(onPressed: (){},
+                    child: TextButton(onPressed: (){
+                      Get.dialog(SettingsWidget());
+                    },
                         child: Text('Settings', style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)
