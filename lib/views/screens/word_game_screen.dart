@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:word_search/controllers/navigation_controller.dart';
 import 'package:word_search/controllers/word_game_controller.dart';
 
 class WordGameScreen extends StatelessWidget {
@@ -26,6 +27,7 @@ class WordGameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigationController = Get.find<NavigationController>();
     final WordGameController controller = Get.put(WordGameController());
 
     // Calculate available container width based on screen width and margins.
@@ -59,7 +61,36 @@ class WordGameScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          // Show confirmation dialog before navigating back.
+                          Get.dialog(
+                            AlertDialog(
+                              title: const Text('Confirm'),
+                              content: const Text(
+                                  'Are you sure you want to go back to menu screen?\nCurrent level progress will not be saved.'
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    // Simply close the dialog if the answer is No.
+                                    Get.back();
+                                  },
+                                  child: const Text('No'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Close the dialog first.
+                                    Get.back();
+                                    // Then navigate back to the menu screen.
+                                    navigationController.navigateTo('/menuScreen');
+                                    // Alternatively, you can use Get.offNamed('/menu') if you want to replace the current screen.
+                                  },
+                                  child: const Text('Yes'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                         icon: const Icon(Icons.arrow_back_outlined, size: 32),
                       ),
                       const Text(
