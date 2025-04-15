@@ -3,37 +3,61 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class WordGameController extends GetxController {
-  // The word to form.
-  final String word = 'طبيب';
+  // Define two levels (each level: 5 words)
+  final List<List<String>> levels = [
+    ['Doctor', 'Nurse', 'Hospital', 'Medicine', 'Patient'],
+    ['Stethoscope', 'Diagnosis', 'Pharmacy', 'Surgery', 'Ambulance'],
+  ];
 
-  // Dimensions for the letter containers.
+  // Track current level and current word index (both 0-based).
+  RxInt currentLevel = 0.obs;
+  RxInt currentWordIndex = 0.obs;
+
+  /// Convenience getter for the current word.
+  String get currentWord => levels[currentLevel.value][currentWordIndex.value];
+
+  // Dimensions for letter container.
   final double containerHeight = 210;
-  final double boxSize = 40; // smaller box size for both draggables & targets.
+  final double boxSize = 40;
   final double containerPadding = 8.0;
 
-  // Observable variables
-  // Holds the random positions for each letter
+  // Observables for draggable letters.
   RxList<Offset> letterPositions = <Offset>[].obs;
-  // Tracks if each letter has been placed (index-based)
   RxList<bool> isLetterPlaced = RxList<bool>();
-  // Contains the letters placed in the drop targets (null if not placed).
   RxList<String?> placedLetters = RxList<String?>();
+  // To remember which draggable (source index) was placed in each target.
+  RxList<int?> placedIndices = RxList<int?>();
+
+  // Observable to animate drag targets upon confirmation.
+  Rx<Color> targetBoxColor = Colors.transparent.obs;
+
+  // Flag to indicate the level has been completed.
+  RxBool levelCompleted = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    isLetterPlaced.value = List<bool>.filled(word.length, false);
-    placedLetters.value = List<String?>.filled(word.length, null);
+    initWord();
   }
 
-  /// Generates non-colliding random positions for the draggable letters.
+  /// Initializes the state for the current word.
+  void initWord() {
+    int len = currentWord.length;
+    isLetterPlaced.value = List<bool>.filled(len, false);
+    placedLetters.value = List<String?>.filled(len, null);
+    placedIndices.value = List<int?>.filled(len, null);
+    letterPositions.value = [];
+    levelCompleted.value = false;
+    targetBoxColor.value = Colors.transparent;
+  }
+
+  /// Generates non-colliding random positions for draggable letters.
   List<Offset> _generateNonCollidingPositions(
       int count,
       double containerWidth,
       double containerHeight,
       double boxSize,
-      double padding,
-      ) {
+      double padding) {
     List<Offset> positions = [];
     Random random = Random();
     double effectiveWidth = containerWidth - padding * 2;
@@ -56,10 +80,10 @@ class WordGameController extends GetxController {
     return positions;
   }
 
-  /// Call this method from your UI once you know the container's available width.
+  /// Generates letter positions for the current word.
   void generatePositions(double containerWidth) {
     letterPositions.value = _generateNonCollidingPositions(
-      word.length,
+      currentWord.length,
       containerWidth,
       containerHeight,
       boxSize,
@@ -67,33 +91,101 @@ class WordGameController extends GetxController {
     );
   }
 
-  /// Places a letter in the target slot.
+  /// Places a letter into a target slot.
   void placeLetter(int targetIndex, int sourceIndex) {
-    placedLetters[targetIndex] = word[sourceIndex];
+    placedLetters[targetIndex] = currentWord[sourceIndex];
+    placedIndices[targetIndex] = sourceIndex;
     isLetterPlaced[sourceIndex] = true;
     update();
   }
 
-  /// Returns the formed word.
-  String get formedWord => placedLetters.join();
-
-  /// Checks if the formed word matches the target word.
-  bool checkWord() {
-    return formedWord.toLowerCase() == word.toLowerCase();
+  /// Removes a letter from a target (e.g. on double tap).
+  void removeLetter(int targetIndex) {
+    int? sourceIndex = placedIndices[targetIndex];
+    if (sourceIndex != null) {
+      isLetterPlaced[sourceIndex] = false;
+      placedLetters[targetIndex] = null;
+      placedIndices[targetIndex] = null;
+      update();
+    }
+  }
+  /// Automatically places the letter from [sourceIndex] into the first available target slot.
+  void autoPlaceLetter(int sourceIndex) {
+    // If already placed, do nothing.
+    if (isLetterPlaced[sourceIndex]) return;
+    // Find the first empty target slot.
+    int targetIndex = placedLetters.indexWhere((element) => element == null);
+    if (targetIndex != -1) {
+      placeLetter(targetIndex, sourceIndex);
+    }
   }
 
-  /// Resets the game state so that all draggable letters are restored.
-  void resetGame(double containerWidth) {
-    isLetterPlaced.value = List<bool>.filled(word.length, false);
-    placedLetters.value = List<String?>.filled(word.length, null);
-    // Generate new positions (or use the same positions if desired).
-    letterPositions.value = _generateNonCollidingPositions(
-      word.length,
-      containerWidth,
-      containerHeight,
-      boxSize,
-      containerPadding,
-    );
+  /// Returns true if every target slot is filled.
+  bool isWordComplete() {
+    return !placedLetters.contains(null);
+  }
+
+  /// Checks whether the formed word matches the current word.
+  bool checkWord() {
+    return placedLetters.join().toLowerCase() == currentWord.toLowerCase();
+  }
+
+  /// Verifies the word and animates the target boxes.
+  Future<void> confirmWord(double containerWidth) async {
+    if (!isWordComplete()) return;
+    if (checkWord()) {
+      targetBoxColor.value = Colors.green;
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (currentWordIndex.value < levels[currentLevel.value].length - 1) {
+        currentWordIndex.value++;
+        initWord();
+        generatePositions(containerWidth);
+      } else {
+        levelCompleted.value = true;
+      }
+      targetBoxColor.value = Colors.transparent;
+      update();
+    } else {
+      targetBoxColor.value = Colors.red;
+      await Future.delayed(const Duration(milliseconds: 500));
+      resetCurrentWord(containerWidth);
+      targetBoxColor.value = Colors.transparent;
+      update();
+    }
+  }
+
+  /// Resets the current word (clearing placements).
+  void resetCurrentWord(double containerWidth) {
+    initWord();
+    generatePositions(containerWidth);
     update();
   }
+
+  /// Resets the current level (starting at word 1).
+  void resetLevel(double containerWidth) {
+    currentWordIndex.value = 0;
+    levelCompleted.value = false;
+    initWord();
+    generatePositions(containerWidth);
+    update();
+  }
+
+  /// Advances to the next level if available.
+  void nextLevel(double containerWidth) {
+    if (currentLevel.value < levels.length - 1) {
+      currentLevel.value++;
+      currentWordIndex.value = 0;
+      levelCompleted.value = false;
+      initWord();
+      generatePositions(containerWidth);
+      update();
+    } else {
+      // Optionally handle end-of-game.
+    }
+  }
+
+  String get formedWord => placedLetters.join();
 }
+
+
+
