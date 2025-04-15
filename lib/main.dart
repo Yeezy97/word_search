@@ -7,6 +7,7 @@ import 'package:word_search/views/screens/home_screen.dart';
 import 'package:word_search/views/screens/menu_screen.dart';
 import 'package:word_search/views/screens/word_game_screen.dart';
 import 'package:word_search/controllers/initial_bindings.dart';
+import 'package:word_search/models/my_translations.dart';
 
 void main() {
   runApp(
@@ -18,6 +19,9 @@ void main() {
           error: Colors.red, // ✅ Define error color
         ),
       ),
+      translations: MyTranslations(),
+      locale: const Locale('en', 'US'), // initial locale
+      fallbackLocale: const Locale('en' , 'US'),
       initialBinding: InitialBindings(),
       initialRoute: '/',
       getPages: [

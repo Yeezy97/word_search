@@ -109,6 +109,13 @@ class WordGameScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black54,
+                            offset: Offset(0.0, 1.0),
+                            blurRadius: 2
+                        )
+                      ]
                   ),
                   child: Center(
                     child: Text(
@@ -126,6 +133,13 @@ class WordGameScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black54,
+                            offset: Offset(0.0, 1.0),
+                            blurRadius: 2
+                        )
+                      ]
                   ),
                   child: const Text(
                     'a professional medical practitioner who treats sick people',
@@ -169,37 +183,42 @@ class WordGameScreen extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                   padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
                   width: containerWidth,
-                  child: Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    alignment: WrapAlignment.center,
-                    children: List.generate(controller.word.length, (targetIndex) {
-                      return DragTarget<int>(
-                        onWillAcceptWithDetails: (details) =>
-                        controller.placedLetters[targetIndex] == null,
-                        onAcceptWithDetails: (details) {
-                          int sourceIndex = details.data;
-                          controller.placeLetter(targetIndex, sourceIndex);
-                        },
-                        builder: (context, candidateData, rejectedData) {
-                          return Container(
-                            width: controller.boxSize,
-                            height: controller.boxSize,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white, width: 2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.center,
-                            child: Obx(
-                                  () => Text(
-                                controller.placedLetters[targetIndex] ?? '',
-                                style: const TextStyle(fontSize: 20, color: Colors.black),
+                  child: Directionality(
+                    textDirection: Get.locale?.languageCode == 'ar'
+                    ? TextDirection.rtl
+                    : TextDirection.ltr,
+                    child: Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      alignment: WrapAlignment.center,
+                      children: List.generate(controller.word.length, (targetIndex) {
+                        return DragTarget<int>(
+                          onWillAcceptWithDetails: (details) =>
+                          controller.placedLetters[targetIndex] == null,
+                          onAcceptWithDetails: (details) {
+                            int sourceIndex = details.data;
+                            controller.placeLetter(targetIndex, sourceIndex);
+                          },
+                          builder: (context, candidateData, rejectedData) {
+                            return Container(
+                              width: controller.boxSize,
+                              height: controller.boxSize,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white, width: 2),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    }),
+                              alignment: Alignment.center,
+                              child: Obx(
+                                    () => Text(
+                                  controller.placedLetters[targetIndex] ?? '',
+                                  style: const TextStyle(fontSize: 20, color: Colors.black),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }),
+                    ),
                   ),
                 ),
                 // Confirm Button (fixed height).
@@ -211,6 +230,13 @@ class WordGameScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: const Color(0xFFF8BD00),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black54,
+                        offset: Offset(0.0, 1.0),
+                        blurRadius: 2
+                      )
+                    ]
                   ),
                   child: TextButton(
                     onPressed: () {

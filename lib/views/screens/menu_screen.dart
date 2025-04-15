@@ -53,8 +53,8 @@ class MenuScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            Text('Score', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),),
-                            Text('Rank', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),),
+                            Text('score'.tr, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),),
+                            Text('rank'.tr, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),),
                           ],
                         ),
                         Row(
@@ -78,7 +78,7 @@ class MenuScreen extends StatelessWidget {
                     child: TextButton(onPressed: (){}, child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Text('Leaderboards',style: TextStyle(fontSize: 25, color: Color(0xFFF8BD00)),),
+                        Text('leaderboards'.tr,style: TextStyle(fontSize: 25, color: Color(0xFFF8BD00)),),
                         Icon(Icons.leaderboard, color: Color(0xFFF8BD00), size: 25,),
                       ],
                     )),
@@ -95,7 +95,7 @@ class MenuScreen extends StatelessWidget {
                       color: Color(0xFFF8BD00),
                     ),
                     child: TextButton(onPressed: (){},
-                        child: Text('Continue', style: TextStyle(
+                        child: Text('continue'.tr, style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)
                     ),
@@ -111,7 +111,7 @@ class MenuScreen extends StatelessWidget {
                     child: TextButton(onPressed: (){
                       navigationController.navigateTo('/wordGameScreen');
                     },
-                        child: Text('New Game', style: TextStyle(
+                        child: Text('new game'.tr, style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)
                     ),
@@ -126,7 +126,7 @@ class MenuScreen extends StatelessWidget {
                     child: TextButton(onPressed: (){
                       Get.dialog(SettingsWidget());
                     },
-                        child: Text('Settings', style: TextStyle(
+                        child: Text('settings'.tr, style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)
                     ),
