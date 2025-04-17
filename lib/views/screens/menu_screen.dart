@@ -93,6 +93,13 @@ class MenuScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: Color(0xFFF8BD00),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black,
+                              offset: Offset(0.0, 1.0),
+                              blurRadius: 1
+                          )
+                        ]
                     ),
                     child: TextButton(onPressed: (){},
                         child: Text('continue'.tr, style: TextStyle(
@@ -107,6 +114,13 @@ class MenuScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: Color(0xFFF8BD00),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black,
+                          offset: Offset(0.0, 1.0),
+                          blurRadius: 1
+                        )
+                      ]
                     ),
                     child: TextButton(onPressed: (){
                       navigationController.navigateTo('/wordGameScreen');
@@ -122,6 +136,13 @@ class MenuScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       color: Color(0xFFF8BD00),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black,
+                              offset: Offset(0.0, 1.0),
+                              blurRadius: 1
+                          )
+                        ]
                     ),
                     child: TextButton(onPressed: (){
                       Get.dialog(SettingsWidget());

@@ -22,15 +22,15 @@ class SettingsWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Settings',
+            Text(
+              'settings'.tr,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             // Example: Sound toggle.
             Obx(() => SwitchListTile(
-              title: const Text('Sound'),
+              title: Text('sound'.tr),
               value: settingsController.isSoundOn.value,
               onChanged: (bool value) {
                 settingsController.toggleSound();
@@ -38,8 +38,8 @@ class SettingsWidget extends StatelessWidget {
             )),
             const SizedBox(height: 20),
             // Language selection.
-            const Text(
-              'Language',
+            Text(
+              'language'.tr,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -61,7 +61,7 @@ class SettingsWidget extends StatelessWidget {
                     onPressed: () {
                       settingsController.setLanguage('Arabic');
                     },
-                    child: const Text('Arabic'),
+                    child: Text('arabic'.tr),
                   ),
                   const SizedBox(height: 5),
                   // English button.
@@ -78,7 +78,7 @@ class SettingsWidget extends StatelessWidget {
                     onPressed: () {
                       settingsController.setLanguage('English');
                     },
-                    child: const Text('English'),
+                    child:  Text('english'.tr),
                   ),
                 ],
               ),
@@ -86,7 +86,7 @@ class SettingsWidget extends StatelessWidget {
             const Spacer(),
             ElevatedButton(
               onPressed: () => Get.back(), // Closes the dialog.
-              child: const Text('Close'),
+              child: Text('close'.tr),
             )
           ],
         ),

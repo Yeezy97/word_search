@@ -18,6 +18,8 @@ void main() {
         colorScheme: ColorScheme.light(
           error: Colors.red, // ✅ Define error color
         ),
+        // Use Rockwell as the default font for the English locale.
+        fontFamily: 'Rockwell',
       ),
       translations: MyTranslations(),
       locale: const Locale('en', 'US'), // initial locale

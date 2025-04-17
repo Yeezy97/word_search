@@ -42,22 +42,22 @@ class WordGameScreen extends StatelessWidget {
       if (controller.levelCompleted.value) {
         Get.dialog(
           AlertDialog(
-            title: Text('You finished level ${controller.currentLevel.value + 1}'),
-            content: const Text('Choose an option:'),
+            title: Text('well_done'.tr),
+            content:  Text('level_complete ${controller.currentLevel.value + 1}'.tr),
             actions: [
               TextButton(
                 onPressed: () {
                   Get.back();
                   controller.resetLevel(containerWidth);
                 },
-                child: const Text('Reset Level'),
+                child: Text('resetLevel'.tr),
               ),
               TextButton(
                 onPressed: () {
                   Get.back();
                   controller.nextLevel(containerWidth);
                 },
-                child: const Text('Next Level'),
+                child: Text('nextLevel'.tr),
               ),
             ],
           ),
@@ -95,21 +95,21 @@ class WordGameScreen extends StatelessWidget {
                             onPressed: () {
                               Get.dialog(
                                 AlertDialog(
-                                  title: const Text('Confirm'),
-                                  content: const Text(
-                                    'Are you sure you want to go back to menu screen?\nCurrent level progress will not be saved.',
+                                  title: Text('confirm'.tr),
+                                  content: Text(
+                                    'back_confirmation'.tr,
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Get.back(),
-                                      child: const Text('No'),
+                                      child: Text('no'.tr),
                                     ),
                                     TextButton(
                                       onPressed: () {
                                         Get.back();
                                         navigationController.navigateTo('/menuScreen');
                                       },
-                                      child: const Text('Yes'),
+                                      child: Text('yes'.tr),
                                     ),
                                   ],
                                 ),
@@ -261,13 +261,20 @@ class WordGameScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
                         color: const Color(0xFFF8BD00),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black,
+                            offset: Offset(0.0, 1.0),
+                            blurRadius: 1
+                          )
+                        ]
                       ),
                       child: TextButton(
                         onPressed: () {
                           controller.confirmWord(containerWidth);
                         },
-                        child: const Text(
-                          'Confirm',
+                        child: Text(
+                          'confirm'.tr,
                           style: TextStyle(fontSize: 22, color: Colors.black),
                         ),
                       ),
