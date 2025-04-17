@@ -27,44 +27,15 @@ class WordGameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final NavigationController navigationController = Get.find<NavigationController>();
-    final WordGameController controller = Get.put(WordGameController());
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double containerWidth = screenWidth - 80; // accounting for horizontal margins
+    final navigationController = Get.find<NavigationController>();
+    final controller = Get.put(WordGameController());
+    final screenWidth = MediaQuery.of(context).size.width;
+    final containerWidth = screenWidth - 80;
 
     // Ensure letter positions are generated for the current word.
     if (controller.letterPositions.isEmpty) {
       controller.generatePositions(containerWidth);
     }
-
-    // Use a post-frame callback to show the level-complete dialog if needed.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (controller.levelCompleted.value) {
-        Get.dialog(
-          AlertDialog(
-            title: Text('well_done'.tr),
-            content:  Text('level_complete ${controller.currentLevel.value + 1}'.tr),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Get.back();
-                  controller.resetLevel(containerWidth);
-                },
-                child: Text('resetLevel'.tr),
-              ),
-              TextButton(
-                onPressed: () {
-                  Get.back();
-                  controller.nextLevel(containerWidth);
-                },
-                child: Text('nextLevel'.tr),
-              ),
-            ],
-          ),
-        );
-        controller.levelCompleted.value = false;
-      }
-    });
 
     return SafeArea(
       child: Scaffold(
@@ -80,12 +51,12 @@ class WordGameScreen extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Main content column.
+              // Main content column
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
                   children: [
-                    // Top Bar with back button and level-word info.
+                    // Top bar
                     SizedBox(
                       height: 50,
                       child: Row(
@@ -96,9 +67,7 @@ class WordGameScreen extends StatelessWidget {
                               Get.dialog(
                                 AlertDialog(
                                   title: Text('confirm'.tr),
-                                  content: Text(
-                                    'back_confirmation'.tr,
-                                  ),
+                                  content: Text('back_confirmation'.tr),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Get.back(),
@@ -119,13 +88,15 @@ class WordGameScreen extends StatelessWidget {
                           ),
                           Obx(() => Text(
                             'Level ${controller.currentLevel.value + 1} - Word ${controller.currentWordIndex.value + 1}',
-                            style: const TextStyle(color: Color(0xFFF8BD00), fontSize: 25),
+                            style: const TextStyle(
+                                color: Color(0xFFF8BD00), fontSize: 25),
                           )),
-                          const SizedBox(),
+                          const SizedBox(width: 32),
                         ],
                       ),
                     ),
-                    // Displayed Word Container.
+
+                    // Displayed Word
                     Container(
                       width: screenWidth,
                       height: 50,
@@ -137,11 +108,13 @@ class WordGameScreen extends StatelessWidget {
                       child: Center(
                         child: Obx(() => Text(
                           controller.currentWord,
-                          style: const TextStyle(fontSize: 30, color: Color(0xFFF8BD00)),
+                          style: const TextStyle(
+                              fontSize: 30, color: Color(0xFFF8BD00)),
                         )),
                       ),
                     ),
-                    // Clue Container.
+
+                    // Clue
                     Container(
                       width: screenWidth,
                       height: 120,
@@ -156,7 +129,8 @@ class WordGameScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 15),
                       ),
                     ),
-                    // Draggable Letters Container.
+
+                    // Draggable Letters
                     Expanded(
                       flex: 1,
                       child: Obx(() {
@@ -169,7 +143,8 @@ class WordGameScreen extends StatelessWidget {
                           padding: EdgeInsets.all(controller.containerPadding),
                           width: containerWidth,
                           child: Stack(
-                            children: List.generate(controller.currentWord.length, (index) {
+                            children: List.generate(
+                                controller.currentWord.length, (index) {
                               return Positioned(
                                 left: controller.letterPositions[index].dx,
                                 top: controller.letterPositions[index].dy,
@@ -179,7 +154,9 @@ class WordGameScreen extends StatelessWidget {
                                   }
                                   return Draggable<int>(
                                     data: index,
-                                    feedback: _buildLetter(controller.currentWord[index], controller.boxSize),
+                                    feedback: _buildLetter(
+                                        controller.currentWord[index],
+                                        controller.boxSize),
                                     childWhenDragging: Container(
                                       width: controller.boxSize,
                                       height: controller.boxSize,
@@ -187,10 +164,11 @@ class WordGameScreen extends StatelessWidget {
                                     ),
                                     child: GestureDetector(
                                       onDoubleTap: () {
-                                        // Auto-place letter on double tap.
                                         controller.autoPlaceLetter(index);
                                       },
-                                      child: _buildLetter(controller.currentWord[index], controller.boxSize),
+                                      child: _buildLetter(
+                                          controller.currentWord[index],
+                                          controller.boxSize),
                                     ),
                                   );
                                 }),
@@ -200,7 +178,8 @@ class WordGameScreen extends StatelessWidget {
                         );
                       }),
                     ),
-                    // Drag Targets Container.
+
+                    // Drag Targets
                     Obx(() {
                       if (controller.placedLetters.length != controller.currentWord.length) {
                         controller.initWord();
@@ -215,34 +194,39 @@ class WordGameScreen extends StatelessWidget {
                           spacing: 4,
                           runSpacing: 4,
                           alignment: WrapAlignment.center,
-                          children: List.generate(controller.currentWord.length, (targetIndex) {
+                          children: List.generate(
+                              controller.currentWord.length, (targetIndex) {
                             return GestureDetector(
                               onDoubleTap: () {
-                                // Remove placed letter via double tap.
                                 controller.removeLetter(targetIndex);
                               },
                               child: DragTarget<int>(
                                 onWillAcceptWithDetails: (details) =>
                                 controller.placedLetters[targetIndex] == null,
                                 onAcceptWithDetails: (details) {
-                                  int sourceIndex = details.data;
-                                  controller.placeLetter(targetIndex, sourceIndex);
+                                  controller.placeLetter(
+                                      targetIndex, details.data);
                                 },
                                 builder: (context, candidateData, rejectedData) {
                                   return Obx(() => AnimatedContainer(
-                                    duration: const Duration(milliseconds: 500),
+                                    duration:
+                                    const Duration(milliseconds: 500),
                                     curve: Curves.easeInOut,
                                     width: controller.boxSize,
                                     height: controller.boxSize,
                                     decoration: BoxDecoration(
                                       color: controller.targetBoxColor.value,
-                                      border: Border.all(color: Colors.white, width: 2),
-                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
+                                      borderRadius:
+                                      BorderRadius.circular(8),
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
                                       controller.placedLetters[targetIndex] ?? '',
-                                      style: const TextStyle(fontSize: 20, color: Colors.black),
+                                      style: const TextStyle(
+                                          fontSize: 20,
+                                          color: Colors.black),
                                     ),
                                   ));
                                 },
@@ -252,7 +236,8 @@ class WordGameScreen extends StatelessWidget {
                         ),
                       );
                     }),
-                    // Confirm Button.
+
+                    // Confirm Button
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 40),
                       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
@@ -261,13 +246,12 @@ class WordGameScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
                         color: const Color(0xFFF8BD00),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
-                            color: Colors.black,
-                            offset: Offset(0.0, 1.0),
-                            blurRadius: 1
-                          )
-                        ]
+                              color: Colors.black,
+                              offset: Offset(0, 1),
+                              blurRadius: 1)
+                        ],
                       ),
                       child: TextButton(
                         onPressed: () {
@@ -275,46 +259,50 @@ class WordGameScreen extends StatelessWidget {
                         },
                         child: Text(
                           'confirm'.tr,
-                          style: TextStyle(fontSize: 22, color: Colors.black),
+                          style: const TextStyle(
+                              fontSize: 22, color: Colors.black),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              // The following Obx watches the levelCompleted flag.
-              // When true, it triggers a dialog via a Future.microtask.
-              Obx(() {
-                if (controller.levelCompleted.value) {
-                  Future.microtask(() {
-                    Get.dialog(
-                      AlertDialog(
-                        title: Text('You finished level ${controller.currentLevel.value + 1}'),
-                        content: const Text('Choose an option:'),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Get.back(); // Close dialog.
-                              controller.resetLevel(containerWidth);
-                            },
-                            child: const Text('Reset Level'),
+
+              // Reactive dialog trigger
+              GetX<WordGameController>(
+                builder: (_) {
+                  if (controller.levelCompleted.value) {
+                    Future.microtask(() {
+                      Get.dialog(
+                        AlertDialog(
+                          title: Text('well_done'.tr),
+                          content: Text(
+                            'level_complete'.trParams({'level': '${controller.currentLevel.value + 1}'}),
                           ),
-                          TextButton(
-                            onPressed: () {
-                              Get.back(); // Close dialog.
-                              controller.nextLevel(containerWidth);
-                            },
-                            child: const Text('Next Level'),
-                          ),
-                        ],
-                      ),
-                    );
-                    // Reset the flag so dialog shows only once.
-                    controller.levelCompleted.value = false;
-                  });
-                }
-                return const SizedBox.shrink();
-              }),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Get.back();
+                                controller.resetLevel(containerWidth);
+                              },
+                              child: Text('resetLevel'.tr),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Get.back();
+                                controller.nextLevel(containerWidth);
+                              },
+                              child: Text('nextLevel'.tr),
+                            ),
+                          ],
+                        ),
+                      );
+                      controller.levelCompleted.value = false;
+                    });
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ],
           ),
         ),
@@ -322,4 +310,3 @@ class WordGameScreen extends StatelessWidget {
     );
   }
 }
-
