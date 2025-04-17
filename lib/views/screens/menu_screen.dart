@@ -3,6 +3,7 @@ import 'package:word_search/constants.dart';
 import 'package:word_search/controllers/navigation_controller.dart';
 import 'package:get/get.dart';
 import 'package:word_search/views/widgets/settings_widget.dart';
+import 'package:word_search/controllers/difficulty_controller.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -10,6 +11,7 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final NavigationController navigationController = Get.find<NavigationController>();
+    final DifficultyController difficultyController = Get.find<DifficultyController>();
     return Scaffold(
       body: SafeArea(
           child: Container(
@@ -18,7 +20,7 @@ class MenuScreen extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: screenColor
             ),
-            child: Padding(padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+            child: Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -37,7 +39,7 @@ class MenuScreen extends StatelessWidget {
                     ),
                   ),
                   Container(  /// Score/Rank
-                    margin: EdgeInsets.symmetric(vertical: 20),
+                    margin: EdgeInsets.symmetric(vertical: 5),
                     width: double.infinity,
                     height: 90,
                     decoration: BoxDecoration(
@@ -84,7 +86,7 @@ class MenuScreen extends StatelessWidget {
                     )),
                   ),
                    /// LOGO
-                  Padding(padding: EdgeInsets.only(top: 20, bottom: 20),
+                  Padding(padding: EdgeInsets.only(top: 10, bottom: 10),
                     child: Image.asset('assets/images/home_logo.png',
                       height: 140,),),
                   Container( /// MENU BUTTONS
@@ -108,7 +110,7 @@ class MenuScreen extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.symmetric(vertical: 10),
+                    margin: EdgeInsets.symmetric(vertical: 5),
                     width: double.infinity,
                     height: 50,
                     decoration: BoxDecoration(
@@ -128,6 +130,114 @@ class MenuScreen extends StatelessWidget {
                         child: Text('new game'.tr, style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    height: 50,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Color(0xFFF8BD00),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black,
+                              offset: Offset(0.0, 1.0),
+                              blurRadius: 1
+                          )
+                        ]
+                    ),
+                    child: TextButton(
+                      onPressed: () {
+                        
+                        Widget buildOption(String title, String subtitle, String value) {
+                          return Obx(() {
+                            final isSelected = difficultyController.selectedDifficulty.value == value;
+                            return GestureDetector(
+                              onTap: () => difficultyController.selectDifficulty(value),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: isSelected ? Colors.blue : Colors.grey),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(child: Text(title, style: TextStyle(fontSize: 18))),
+                                        if (isSelected) const Icon(Icons.check, color: Colors.blue),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(subtitle, style: TextStyle(color: Colors.grey[700])),
+                                  ],
+                                ),
+                              ),
+                            );
+                          });
+                        }
+
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return Dialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.95,
+                                height: MediaQuery.of(context).size.height * 0.8,
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('difficulty'.tr,
+                                          style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 20),
+                                      buildOption(
+                                        'Progressive Difficulty',
+                                        'Progressive difficulty means the player will experience more challenges as he progresses through the levels',
+                                        'Progressive Difficulty',
+                                      ),
+                                      buildOption(
+                                        'Beginner',
+                                        'Suitable for language learners with little background in Arabic',
+                                        'Beginner',
+                                      ),
+                                      buildOption(
+                                        'Intermediate',
+                                        'Moderate difficulty with some hidden letters in the suggested words',
+                                        'Intermediate',
+                                      ),
+                                      buildOption(
+                                        'Challenger',
+                                        'For players who prefer a challenging experience where word definitions and the majority of the word letters are hidden',
+                                        'Challenger',
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: TextButton(
+                                          onPressed: () => Get.back(),
+                                          child: Text('close'.tr),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: Text('difficulty'.tr,
+                          style: const TextStyle(
+                              fontSize: 25,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                   Container(
