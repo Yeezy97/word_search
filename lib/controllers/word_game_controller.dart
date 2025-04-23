@@ -6,6 +6,9 @@ import 'package:csv/csv.dart';
 
 import '../models/word_entry.dart';
 import 'difficulty_controller.dart';
+import 'auth_controller.dart';
+import 'progress_controller.dart';
+import 'local_progress_controller.dart';
 
 class WordGameController extends GetxController {
   static const int wordsPerLevel = 5;
@@ -207,11 +210,15 @@ class WordGameController extends GetxController {
     if (checkUserAnswer()) {
       targetHighlightColor.value = Colors.green;
       await Future.delayed(const Duration(milliseconds: 500));
-      if (currentWordIndex.value < wordsPerLevel - 1) {
-        currentWordIndex.value++;
-        startNextWord();
-      } else {
-        levelCompleted.value = true;
+
+      // *** NEW SAVE LOGIC ***
+      final auth = Get.find<AuthController>();
+      if (auth.isLoggedIn) {
+        Get.find<ProgressController>()
+            .updateProgress(newLevel: currentLevelIndex.value + 1);
+      } else if (auth.isPlayingGuest) {
+        Get.find<LocalProgressController>()
+            .updateLocalProgress(newLevel: currentLevelIndex.value + 1);
       }
     } else {
       targetHighlightColor.value = Colors.red;

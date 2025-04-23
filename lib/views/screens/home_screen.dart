@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
+import 'package:word_search/controllers/auth_controller.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = Get.find<AuthController>();
+
     return Scaffold(
         body: SafeArea(
           child: Container(
@@ -50,7 +54,29 @@ class HomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: TextButton(
-                        onPressed: (){},
+                        onPressed: () async {
+                          // ask user for a local “guest name”
+                          final ctrl = TextEditingController();
+                          showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: Text('Enter your name'),
+                              content: TextField(controller: ctrl, decoration: InputDecoration(hintText: 'Guest name')),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+                                TextButton(onPressed: () {
+                                  final name = ctrl.text.trim();
+                                  if (name.isNotEmpty) {
+                                    auth.signUpAsGuest(name);
+                                    Navigator.pop(context);
+                                    Get.toNamed('/menuScreen');
+                                  }
+                                }, child: Text('OK')),
+                              ],
+                            ),
+                          );
+                          Get.toNamed('/menuScreen');
+                        },
                         child:Text(
                           'Play As Guest',
                           style: TextStyle(
@@ -72,7 +98,10 @@ class HomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: TextButton(
-                      onPressed: (){},
+                      onPressed: () async {
+                        await auth.signInWithGoogle();
+                        Get.toNamed('/menuScreen');
+                      },
                       child:Row(
                         children: [
                           Icon(FontAwesomeIcons.google),

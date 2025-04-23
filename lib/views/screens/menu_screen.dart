@@ -4,12 +4,18 @@ import 'package:word_search/controllers/navigation_controller.dart';
 import 'package:get/get.dart';
 import 'package:word_search/views/widgets/settings_widget.dart';
 import 'package:word_search/controllers/difficulty_controller.dart';
+import 'package:word_search/controllers/auth_controller.dart';
+import 'package:word_search/controllers/progress_controller.dart';
+import 'package:word_search/controllers/local_progress_controller.dart';
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = Get.find<AuthController>();
+    final cloud = Get.find<ProgressController>();
+    final local = Get.find<LocalProgressController>();
     final NavigationController navigationController = Get.find<NavigationController>();
     final DifficultyController difficultyController = Get.find<DifficultyController>();
     return Scaffold(
@@ -31,9 +37,24 @@ class MenuScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Icon(Icons.account_circle_rounded, color: Colors.white,size: 45, ),
-                        Text('Hello Guest!', style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white
-                        ),),
+                        Obx(() {
+                          if (auth.isPlayingGuest) {
+                            return Text(
+                              'Hello ${auth.guestName ?? 'Guest'}!',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                            );
+                          } else if (auth.isLoggedIn) {
+                            return Text(
+                              'Hello ${auth.firebaseUser.value!.displayName ?? 'User'}!',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                            );
+                          } else {
+                            return Text(
+                              'Hello Guest!',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                            );
+                          }
+                        }),
                         Icon(Icons.logout, size: 30,)
                       ],
                     ),
@@ -62,8 +83,20 @@ class MenuScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            Text('--', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFF8BD00)),),
-                            Text('--', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFF8BD00)),),
+                            // Score:
+                            Obx(() => Text(
+                              auth.isLoggedIn
+                                  ? cloud.score.value.toString()
+                                  : local.score.value.toString(),
+                              style: TextStyle(fontSize:20, fontWeight: FontWeight.bold, color: Color(0xFFF8BD00)),
+                            )),
+                            // Rank: only for Google users
+                            Obx(() => Text(
+                              auth.isLoggedIn
+                                  ? (cloud.rank.value > 0 ? cloud.rank.value.toString() : '--')
+                                  : '--',
+                              style: TextStyle(fontSize:20, fontWeight: FontWeight.bold, color: Color(0xFFF8BD00)),
+                            )),
                           ],
                         ),
 
@@ -77,7 +110,9 @@ class MenuScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(30),
                       color: Colors.white,
                     ),
-                    child: TextButton(onPressed: (){}, child: Row(
+                    child: TextButton(onPressed: (){
+                      navigationController.navigateTo('/leaderboard');
+                    }, child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text('leaderboards'.tr,style: TextStyle(fontSize: 25, color: Color(0xFFF8BD00)),),
