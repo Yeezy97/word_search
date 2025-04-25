@@ -1,9 +1,10 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:word_search/views/screens/home_screen.dart';
 import 'package:word_search/views/screens/leaderboard_screen.dart';
+import 'package:word_search/views/screens/levels_screen.dart';
 import 'package:word_search/views/screens/menu_screen.dart';
 import 'package:word_search/views/screens/word_game_screen.dart';
 import 'package:word_search/controllers/initial_bindings.dart';
@@ -16,6 +17,14 @@ Future<void> main() async {
   await Firebase.initializeApp();
   final prefs = await SharedPreferences.getInstance();
   Get.put(prefs);
+
+  // Determine starting route
+  final firebaseUser = FirebaseAuth.instance.currentUser;
+  final hasGuestName = prefs.getString('guest_name') != null;
+  final String initialRoute = (firebaseUser != null || hasGuestName)
+      ? '/menuScreen'
+      : '/';
+
   runApp(
     GetMaterialApp(
       debugShowCheckedModeBanner: false,
@@ -32,12 +41,13 @@ Future<void> main() async {
       locale: const Locale('en', 'US'), // initial locale
       fallbackLocale: const Locale('en' , 'US'),
       initialBinding: InitialBindings(),
-      initialRoute: '/',
+      initialRoute: initialRoute,
       getPages: [
         GetPage(name: '/', page: ()=> HomeScreen()),
         GetPage(name: '/menuScreen', page: ()=> MenuScreen()),
         GetPage(name: '/wordGameScreen', page: ()=> WordGameScreen()),
         GetPage(name: '/leaderboard', page: () => LeaderboardScreen()),
+        GetPage(name: '/levels',     page: () => LevelsScreen()),
       ],
       //home: MenuScreen(),
     ),

@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
 class LeaderboardScreen extends StatelessWidget {
+  const LeaderboardScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

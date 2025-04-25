@@ -12,219 +12,294 @@ import 'local_progress_controller.dart';
 
 class WordGameController extends GetxController {
   static const int wordsPerLevel = 5;
+  static const int levelsPerChapter = 100;
+  static const int wordsPerChapter = wordsPerLevel * levelsPerChapter;
   static final RegExp _arabicDiacritics = RegExp(r'[\u064B-\u065F\u0670\u06D6-\u06ED]');
 
-  final DifficultyController difficultyController = Get.find<DifficultyController>();
+  // Controllers
+  final DifficultyController difficultyController = Get.find();
+  final ProgressController cloudProgressController = Get.find();
+  final LocalProgressController guestProgressController = Get.find();
+  final AuthController authController = Get.find();
 
-  RxList<WordEntry> wordBank = <WordEntry>[].obs;
-  late final List<List<WordEntry>> levels;
+  // CSV and chapter cache
+  late List<List<dynamic>> _allCsvRows;
+  final Map<int, List<WordEntry>> _chapterCache = {};
 
+  // Current chapter/level data
+  List<List<WordEntry>> levels = [];
   RxInt currentLevelIndex = 0.obs;
-  RxInt currentWordIndex  = 0.obs;
+  RxInt currentWordIndex = 0.obs;
 
-  RxString displayedWord       = ''.obs;
+  // Displayed word/definition
+  RxString displayedWord = ''.obs;
   RxString displayedDefinition = ''.obs;
+  RxList<bool> hiddenLetterFlags = <bool>[].obs;
 
-  /// Computed once per word, not in a getter!
-  RxList<bool> hiddenLetterFlags = RxList<bool>();
-
+  // Drag-drop UI state
   RxList<Offset> letterBoxPositions = <Offset>[].obs;
-  RxList<bool>   isLetterBoxPlaced  = RxList<bool>();
-  RxList<String?> lettersInTargets  = RxList<String?>();
-  RxList<int?>   targetToSourceMap  = RxList<int?>();
+  RxList<bool> isLetterBoxPlaced = RxList<bool>();
+  RxList<String?> lettersInTargets = RxList<String?>();
+  RxList<int?> targetToSourceMap = RxList<int?>();
+  Rx<Color> targetHighlightColor = Colors.transparent.obs;
+  RxBool levelCompleted = false.obs;
+  RxBool isInitialized = false.obs;
 
-  Rx<Color>  targetHighlightColor = Colors.transparent.obs;
-  RxBool    levelCompleted       = false.obs;
+  // Layout parameters
+  double lastBoxContainerWidth = 0;
+  final double boxContainerHeight = 210;
+  final double letterBoxSize = 40;
+  final double boxContainerPadding = 8;
 
-  double    lastContainerWidth    = 0;
-  final double letterContainerHeight = 210;
-  final double letterBoxSize         = 40;
-  final double letterContainerPadding= 8;
+  /// Total number of levels across the entire CSV data.
+  int get totalLevelsCount => (_allCsvRows.length / wordsPerLevel).ceil();
+
+  /// Total number of chapters (groups of 100 levels).
+  int get totalChaptersCount => (totalLevelsCount / levelsPerChapter).ceil();
+
+  /// One-based current chapter number for UI.
+  int get currentChapterNumber => (currentLevelIndex.value ~/ levelsPerChapter) + 1;
+
+  /// One-based current level number for UI.
+  int get currentLevelNumber => currentLevelIndex.value + 1;
 
   @override
   Future<void> onInit() async {
     super.onInit();
-    await _loadWordBank();
-    _splitIntoLevels();
-    startNextWord();
+    // Load CSV data once
+    await _loadCsvData();
+
+    // Determine starting level
+    final levelVal = authController.isLoggedIn
+        ? cloudProgressController.level.value
+        : guestProgressController.level.value;
+    final initialIndex = levelVal > 0 ? levelVal - 1 : 0;
+    final initialChapter = initialIndex ~/ levelsPerChapter;
+
+    await prepareChapter(initialChapter);
+    currentLevelIndex.value = initialIndex;
+    currentWordIndex.value = 0;
+    await startNextWord();
+
+    // React to progress changes
+    ever<int>(cloudProgressController.level, (newLevel) async {
+      if (authController.isLoggedIn) {
+        final idx = newLevel > 0 ? newLevel - 1 : 0;
+        final chap = idx ~/ levelsPerChapter;
+        await prepareChapter(chap);
+        currentLevelIndex.value = idx;
+        currentWordIndex.value = 0;
+        await startNextWord();
+      }
+    });
+    ever<int>(guestProgressController.level, (newLevel) async {
+      if (!authController.isLoggedIn) {
+        final idx = newLevel > 0 ? newLevel - 1 : 0;
+        final chap = idx ~/ levelsPerChapter;
+        await prepareChapter(chap);
+        currentLevelIndex.value = idx;
+        currentWordIndex.value = 0;
+        await startNextWord();
+      }
+    });
+
+    isInitialized.value = true;
   }
 
-  Future<void> _loadWordBank() async {
-    final raw = await rootBundle.loadString('assets/data/arabic_nouns.csv');
-    final rows = const CsvToListConverter(eol: '\n').convert(raw);
-    final temp = <WordEntry>[];
-    for (var i = 1; i < rows.length; i++) {
-      temp.add(WordEntry(lemma: rows[i][0].toString(), definition: rows[i][1].toString()));
-    }
-    final seen = <String>{};
-    final uniq = temp.where((e) => seen.add(e.lemma)).toList();
-    uniq.shuffle();
-    wordBank.value = uniq;
+  Future<void> _loadCsvData() async {
+    final dataString = await rootBundle.loadString('assets/data/arabic_nouns.csv');
+    final rows = const CsvToListConverter().convert(dataString);
+    _allCsvRows = rows.length > 1 ? rows.sublist(1) : [];
+    print('[CSV] Loaded total entries: ${_allCsvRows.length}');
   }
 
-  void _splitIntoLevels() {
+  /// Load and cache a chapter (500 words).
+  Future<void> _loadChapter(int chapterIndex) async {
+    if (_chapterCache.containsKey(chapterIndex)) return;
+    final start = chapterIndex * wordsPerChapter;
+    final end = (start + wordsPerChapter).clamp(0, _allCsvRows.length);
+    final slice = _allCsvRows.sublist(start, end);
+    final entries = slice.map((columns) {
+      return WordEntry(
+        lemma: columns[0].toString(),
+        definition: columns[1].toString(),
+      );
+    }).toList();
+    _chapterCache[chapterIndex] = entries;
+    print('[CSV] Cached chapter ${chapterIndex + 1} with ${entries.length} entries');
+  }
+
+  /// Prepare level list for a chapter.
+  Future<void> prepareChapter(int chapterIndex) async {
+    await _loadChapter(chapterIndex);
+    final allEntries = _chapterCache[chapterIndex]!;
     levels = [];
-    for (var i = 0; i + wordsPerLevel <= wordBank.length; i += wordsPerLevel) {
-      levels.add(wordBank.getRange(i, i + wordsPerLevel).toList());
+    for (int i = 0; i < allEntries.length; i += wordsPerLevel) {
+      final end = (i + wordsPerLevel).clamp(0, allEntries.length);
+      levels.add(allEntries.sublist(i, end));
     }
+    final computedLevels = (allEntries.length / wordsPerLevel).ceil();
+    print('[CSV] Prepared $computedLevels levels for chapter ${chapterIndex + 1}');
   }
 
-  /// Word without diacritics
-  String get sanitizedWord =>
-      displayedWord.value.replaceAll(_arabicDiacritics, '');
+  String get sanitizedWord => displayedWord.value.replaceAll(_arabicDiacritics, '');
 
-  /// Simply read the flags, don’t modify anything here
   String get maskedDisplayedWord {
     final diff = difficultyController.selectedDifficulty.value;
-    final base = sanitizedWord;
-    // Beginner: no masking
     if (diff == 'Beginner') return displayedWord.value;
-
+    final base = sanitizedWord;
     final flags = hiddenLetterFlags;
     final buffer = StringBuffer();
-    for (var i = 0; i < base.length; i++) {
+    for (int i = 0; i < base.length; i++) {
       buffer.write(flags[i] ? '_' : base[i]);
     }
     return buffer.toString();
   }
 
-  /// Public: advance to the next word
-  void startNextWord() {
-    if (levels.isEmpty) return;
-    final entry = levels[currentLevelIndex.value][currentWordIndex.value];
-    displayedWord.value       = entry.lemma;
+  /// Advance to the next word in the current chapter.
+  Future<void> startNextWord() async {
+    final levelIndex = currentLevelIndex.value;
+    final chapterIndex = levelIndex ~/ levelsPerChapter;
+    if (!_chapterCache.containsKey(chapterIndex)) {
+      await prepareChapter(chapterIndex);
+    }
+    final entry = levels[levelIndex % levelsPerChapter][currentWordIndex.value];
+    displayedWord.value = entry.lemma;
     displayedDefinition.value = entry.definition;
-
-    _computeHiddenFlags();       // ← compute flags once here
+    computeHiddenLetterFlags();
     resetPlacementState();
-    _layoutLetterBoxes();
+    generateLetterBoxes();
     update();
   }
 
-  /// Based on selectedDifficulty and level, build hiddenLetterFlags
-  void _computeHiddenFlags() {
-    final diff = difficultyController.selectedDifficulty.value;
+  void computeHiddenLetterFlags() {
     final base = sanitizedWord;
     final length = base.length;
-
-    // Determine fraction to hide
+    final diff = difficultyController.selectedDifficulty.value;
     double fraction;
     switch (diff) {
-      case 'Beginner':
-        fraction = 0.0;
-        break;
-      case 'Intermediate':
-        fraction = 2/6;
-        break;
-      case 'Challenger':
-        fraction = 4/6;
-        break;
-      default: // Progressive
-        if (currentLevelIndex.value > 20) fraction = 4/6;
-        else if (currentLevelIndex.value > 10) fraction = 3/6;
-        else if (currentLevelIndex.value > 2)  fraction = 2/6;
+      case 'Beginner': fraction = 0.0; break;
+      case 'Intermediate': fraction = 2 / 6; break;
+      case 'Challenger': fraction = 4 / 6; break;
+      default:
+        if (currentLevelIndex.value > 20) fraction = 4 / 6;
+        else if (currentLevelIndex.value > 10) fraction = 3 / 6;
+        else if (currentLevelIndex.value > 2) fraction = 2 / 6;
         else fraction = 0.0;
     }
-
     int hideCount = (length * fraction).floor();
     if (length.isOdd && hideCount > 0) hideCount--;
-
     hiddenLetterFlags.value = List<bool>.filled(length, false);
-    final rnd = Random();
+    final random = Random();
     final chosen = <int>{};
     while (chosen.length < hideCount && chosen.length < length) {
-      chosen.add(rnd.nextInt(length));
+      chosen.add(random.nextInt(length));
     }
-    for (var idx in chosen) {
-      hiddenLetterFlags[idx] = true;
-    }
+    for (final idx in chosen) hiddenLetterFlags[idx] = true;
   }
 
   void resetPlacementState() {
     final count = sanitizedWord.length;
     isLetterBoxPlaced.value = List<bool>.filled(count, false);
-    lettersInTargets.value  = List<String?>.filled(count, null);
+    lettersInTargets.value = List<String?>.filled(count, null);
     targetToSourceMap.value = List<int?>.filled(count, null);
-    letterBoxPositions.value= [];
+    letterBoxPositions.value = [];
     targetHighlightColor.value = Colors.transparent;
   }
 
-  void _layoutLetterBoxes() {
-    final count = sanitizedWord.length;
-    final rnd   = Random();
-    final pad   = letterContainerPadding;
-    final ew    = lastContainerWidth - pad*2 - letterBoxSize;
-    final eh    = letterContainerHeight - pad*2 - letterBoxSize;
+  void generateLetterBoxes() {
+      //  if we haven’t yet measured the parent width, skip layout entirely
+      if (lastBoxContainerWidth <= 0) {
+        letterBoxPositions.clear();
+        return;
+      }
+
+    final int count = sanitizedWord.length;
+    final random = Random();
+    final pad = boxContainerPadding;
+    final widthLimit = lastBoxContainerWidth - pad * 2 - letterBoxSize;
+    final heightLimit = boxContainerHeight    - pad * 2 - letterBoxSize;
 
     final positions = <Offset>[];
-    int tries = 0;
-    while (positions.length < count && tries < 2000) {
-      final dx = pad + rnd.nextDouble()*ew;
-      final dy = pad + rnd.nextDouble()*eh;
-      final rect = Rect.fromLTWH(dx, dy, letterBoxSize, letterBoxSize);
-      final overlap = positions.any((o) {
-        final r2 = Rect.fromLTWH(o.dx, o.dy, letterBoxSize, letterBoxSize);
-        return r2.overlaps(rect);
-      });
-      if (!overlap) positions.add(Offset(dx, dy));
-      tries++;
+    int attempts = 0;
+    while (positions.length < count && attempts < 2000) {
+      double x = pad + random.nextDouble() * widthLimit;
+      double y = pad + random.nextDouble() * heightLimit;
+
+      // <<< clamp so the box never gets closer than 'pad' to any border
+      x = x.clamp(pad, pad + widthLimit)         as double;
+      y = y.clamp(pad, pad + heightLimit)        as double;
+
+      final rect = Rect.fromLTWH(x, y, letterBoxSize, letterBoxSize);
+      final overlap = positions.any((existing) =>
+          Rect.fromLTWH(existing.dx, existing.dy, letterBoxSize, letterBoxSize)
+              .overlaps(rect)
+      );
+      if (!overlap) positions.add(Offset(x, y));
+      attempts++;
     }
+
     letterBoxPositions.value = positions;
   }
 
-  /// Call after layout measurement
+
+  /// Called by the UI to layout draggable letters
   void generateLetterPositions(double width) {
-    lastContainerWidth = width;
-    _layoutLetterBoxes();
+    lastBoxContainerWidth = width;
+    generateLetterBoxes();
   }
 
-  void placeLetterInTarget(int tIdx, int sIdx) {
-    lettersInTargets[tIdx]     = sanitizedWord[sIdx];
-    targetToSourceMap[tIdx]    = sIdx;
-    isLetterBoxPlaced[sIdx]    = true;
+  /// Place a letter into a target slot
+  void placeLetterInTarget(int targetIndex, int sourceIndex) {
+    lettersInTargets[targetIndex] = sanitizedWord[sourceIndex];
+    targetToSourceMap[targetIndex] = sourceIndex;
+    isLetterBoxPlaced[sourceIndex] = true;
     update();
   }
 
-  void removeLetterFromTarget(int tIdx) {
-    final sIdx = targetToSourceMap[tIdx];
-    if (sIdx != null) {
-      isLetterBoxPlaced[sIdx]     = false;
-      lettersInTargets[tIdx]      = null;
-      targetToSourceMap[tIdx]     = null;
+  /// Remove a letter from its slot
+  void removeLetterFromTarget(int targetIndex) {
+    final sourceIndex = targetToSourceMap[targetIndex];
+    if (sourceIndex != null) {
+      isLetterBoxPlaced[sourceIndex] = false;
+      lettersInTargets[targetIndex] = null;
+      targetToSourceMap[targetIndex] = null;
       update();
     }
   }
 
-  void autoPlaceLetterBox(int sIdx) {
-    if (isLetterBoxPlaced[sIdx]) return;
-    final tIdx = lettersInTargets.indexWhere((l) => l == null);
-    if (tIdx >= 0) placeLetterInTarget(tIdx, sIdx);
+  /// Auto-fill the next available slot with a letter
+  void autoPlaceLetterBox(int sourceIndex) {
+    if (isLetterBoxPlaced[sourceIndex]) return;
+    final targetIndex = lettersInTargets.indexWhere((l) => l == null);
+    if (targetIndex >= 0) placeLetterInTarget(targetIndex, sourceIndex);
   }
 
-  bool get isCurrentWordComplete => !lettersInTargets.contains(null);
-  bool checkUserAnswer() =>
-      lettersInTargets.join().toLowerCase() == sanitizedWord.toLowerCase();
-
+  /// Confirm user answer and advance
   Future<void> confirmUserAnswer() async {
-    if (!isCurrentWordComplete) return;
-    if (checkUserAnswer()) {
+    if (lettersInTargets.contains(null)) return;
+    if (lettersInTargets.join().toLowerCase() ==
+        sanitizedWord.toLowerCase()) {
       targetHighlightColor.value = Colors.green;
       await Future.delayed(const Duration(milliseconds: 500));
-
-      // *** NEW SAVE LOGIC ***
-      final auth = Get.find<AuthController>();
-      if (auth.isLoggedIn) {
-        Get.find<ProgressController>()
-            .updateProgress(newLevel: currentLevelIndex.value + 1);
-      } else if (auth.isPlayingGuest) {
-        Get.find<LocalProgressController>()
-            .updateLocalProgress(newLevel: currentLevelIndex.value + 1);
+      if (authController.isLoggedIn) {
+        await cloudProgressController.updateProgress(
+            newLevel: currentLevelIndex.value + 1);
+      } else if (authController.isPlayingGuest) {
+        guestProgressController.updateLocalProgress(
+            newLevel: currentLevelIndex.value + 1);
+      }
+      if (currentWordIndex.value < wordsPerLevel - 1) {
+        currentWordIndex.value++;
+        await startNextWord();
+      } else {
+        levelCompleted.value = true;
       }
     } else {
       targetHighlightColor.value = Colors.red;
       await Future.delayed(const Duration(milliseconds: 500));
       resetPlacementState();
-      generateLetterPositions(lastContainerWidth);
+      generateLetterBoxes();
     }
     targetHighlightColor.value = Colors.transparent;
     update();

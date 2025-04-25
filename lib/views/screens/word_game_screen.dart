@@ -1,32 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:word_search/controllers/navigation_controller.dart';
-import 'package:word_search/controllers/word_game_controller.dart';
+import '../../controllers/navigation_controller.dart';
+import '../../controllers/word_game_controller.dart';
 
 class WordGameScreen extends StatelessWidget {
   const WordGameScreen({Key? key}) : super(key: key);
 
-  Widget _buildLetterBox(String letter, double size) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: const Color(0xFFF8BD00), width: 2),
-    ),
-    child: Center(child: Text(letter, style: const TextStyle(fontSize: 20, color: Color(0xFFF8BD00)))),
-  );
+  Widget _buildLetterBox(String letter, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFF8BD00), width: 2),
+      ),
+      child: Center(
+        child: Text(letter, style: const TextStyle(fontSize: 20, color: Color(0xFFF8BD00))),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final navController  = Get.find<NavigationController>();
+    final navigationController = Get.find<NavigationController>();
     final gameController = Get.put(WordGameController());
-    final screenWidth    = MediaQuery.of(context).size.width;
-    final letterAreaWidth= screenWidth - 80;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final letterAreaWidth = screenWidth - 80;
 
-    // Layout letters if first build
+    // Lay out letters once when the container width is known
     if (gameController.letterBoxPositions.isEmpty) {
       gameController.generateLetterPositions(letterAreaWidth);
+    }
+
+    if (!gameController.isInitialized.value) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return SafeArea(
@@ -45,7 +55,7 @@ class WordGameScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
                   children: [
-                    // Top bar
+                    // Top Bar
                     SizedBox(
                       height: 50,
                       child: Row(
@@ -59,25 +69,31 @@ class WordGameScreen extends StatelessWidget {
                                   content: Text('back_confirmation'.tr),
                                   actions: [
                                     TextButton(onPressed: () => Get.back(), child: Text('no'.tr)),
-                                    TextButton(onPressed: () {
-                                      Get.back();
-                                      navController.navigateTo('/menuScreen');
-                                    }, child: Text('yes'.tr)),
+                                    TextButton(
+                                      onPressed: () {
+                                        Get.back();
+                                        navigationController.navigateTo('/menuScreen');
+                                      },
+                                      child: Text('yes'.tr),
+                                    ),
                                   ],
                                 ),
                               );
                             },
                           ),
-                          Obx(() => Text(
-                            'Level ${gameController.currentLevelIndex.value + 1}   '
-                                'Word  ${gameController.currentWordIndex.value  + 1}',
-                            style: const TextStyle(color: Color(0xFFF8BD00), fontSize: 20),
-                          )),
+                          Obx(() {
+                            final levelNumber = gameController.currentLevelIndex.value + 1;
+                            final wordNumber = gameController.currentWordIndex.value + 1;
+                            return Text(
+                              'Level $levelNumber   Word  $wordNumber',
+                              style: const TextStyle(color: Color(0xFFF8BD00), fontSize: 20),
+                            );
+                          }),
                         ],
                       ),
                     ),
 
-                    // Displayed word (masked/unmasked)
+                    // Displayed Word
                     Container(
                       width: screenWidth,
                       height: 50,
@@ -91,7 +107,7 @@ class WordGameScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Definition
+                    // Definition (RTL)
                     Directionality(
                       textDirection: TextDirection.rtl,
                       child: Container(
@@ -107,44 +123,59 @@ class WordGameScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Draggable letters
+                    // Randomly positioned letter boxes
                     Expanded(
-                      child: Obx(() {
-                        final length = gameController.sanitizedWord.length;
-                        if (gameController.letterBoxPositions.length != length) {
-                          gameController.generateLetterPositions(letterAreaWidth);
-                          return const SizedBox();
-                        }
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                          padding: EdgeInsets.all(gameController.letterContainerPadding),
-                          width: letterAreaWidth,
-                          child: Stack(
-                            children: List.generate(length, (i) {
-                              final pos = gameController.letterBoxPositions[i];
-                              return Positioned(
-                                left: pos.dx,
-                                top: pos.dy,
-                                child: Obx(() {
-                                  if (gameController.isLetterBoxPlaced[i]) return const SizedBox();
-                                  return Draggable<int>(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                        width: letterAreaWidth,
+                        height: gameController.boxContainerHeight,
+                        padding: EdgeInsets.all(gameController.boxContainerPadding),
+                        child: Obx(() {
+                          final letterCount = gameController.sanitizedWord.length;
+                          // ensure positions match count
+                          if (gameController.letterBoxPositions.length != letterCount) {
+                            gameController.generateLetterPositions(letterAreaWidth);
+                            return const SizedBox();
+                          }
+                          return Stack(
+                            children: List.generate(letterCount, (i) {
+                              // ◀ wrap each in its own Obx
+                              return Obx(() {
+                                // ◀ if already placed, draw nothing
+                                if (gameController.isLetterBoxPlaced[i]) {
+                                  return const SizedBox();
+                                }
+                                final pos = gameController.letterBoxPositions[i];
+                                return Positioned(
+                                  left: pos.dx,
+                                  top: pos.dy,
+                                  child: Draggable<int>(
                                     data: i,
-                                    feedback: _buildLetterBox(gameController.sanitizedWord[i], gameController.letterBoxSize),
-                                    childWhenDragging: SizedBox(width: gameController.letterBoxSize, height: gameController.letterBoxSize),
+                                    feedback: _buildLetterBox(
+                                      gameController.sanitizedWord[i],
+                                      gameController.letterBoxSize,
+                                    ),
+                                    childWhenDragging: SizedBox(
+                                      width: gameController.letterBoxSize,
+                                      height: gameController.letterBoxSize,
+                                    ),
                                     child: GestureDetector(
                                       onDoubleTap: () => gameController.autoPlaceLetterBox(i),
-                                      child: _buildLetterBox(gameController.sanitizedWord[i], gameController.letterBoxSize),
+                                      child: _buildLetterBox(
+                                        gameController.sanitizedWord[i],
+                                        gameController.letterBoxSize,
+                                      ),
                                     ),
-                                  );
-                                }),
-                              );
+                                  ),
+                                );
+                              });
                             }),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ),
                     ),
 
-                    // Drop targets
+                    // Drop targets & confirm button (unchanged)
                     Obx(() {
                       final length = gameController.sanitizedWord.length;
                       if (gameController.lettersInTargets.length != length) {
@@ -192,7 +223,7 @@ class WordGameScreen extends StatelessWidget {
                       );
                     }),
 
-                    // Confirm button
+                    // Confirm button (unchanged)
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 40),
                       width: 300,
@@ -200,49 +231,57 @@ class WordGameScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8BD00),
                         borderRadius: BorderRadius.circular(15),
-                        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0,1), blurRadius: 1)],
+                        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(0, 1), blurRadius: 1)],
                       ),
                       child: TextButton(
                         onPressed: gameController.confirmUserAnswer,
                         child: Text('confirm'.tr, style: const TextStyle(fontSize: 22, color: Colors.black)),
                       ),
                     ),
+
                   ],
                 ),
               ),
 
-              // Level‑complete dialog
-              GetX<WordGameController>(builder: (_) {
-                if (gameController.levelCompleted.value) {
-                  gameController.levelCompleted.value = false;
-                  Future.microtask(() {
-                    Get.dialog(
-                      AlertDialog(
-                        title: Text('well_done'.tr),
-                        content: Text('level_complete'.trParams({
-                          'level': '${gameController.currentLevelIndex.value + 1}'
-                        })),
-                        actions: [
-                          TextButton(onPressed: () {
-                            Get.back();
-                            gameController.currentWordIndex.value = 0;
-                            gameController.startNextWord();
-                            gameController.levelCompleted.value = false;
-                          }, child: Text('resetLevel'.tr)),
-                          TextButton(onPressed: () {
-                            Get.back();
-                            gameController.currentLevelIndex.value++;
-                            gameController.currentWordIndex.value = 0;
-                            gameController.startNextWord();
-                            gameController.levelCompleted.value = false;
-                          }, child: Text('nextLevel'.tr)),
-                        ],
-                      ),
-                    );
-                  });
-                }
-                return const SizedBox.shrink();
-              }),
+              // Level-complete dialog (unchanged)
+              GetX<WordGameController>(
+                builder: (_) {
+                  if (gameController.levelCompleted.value) {
+                    gameController.levelCompleted.value = false;
+                    Future.microtask(() {
+                      Get.dialog(
+                        AlertDialog(
+                          title: Text('well_done'.tr),
+                          content: Text('level_complete'.trParams({
+                            'level': '${gameController.currentLevelIndex.value + 1}'
+                          })),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Get.back();
+                                gameController.currentWordIndex.value = 0;
+                                gameController.startNextWord();
+                              },
+                              child: Text('resetLevel'.tr),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Get.back();
+                                gameController.currentLevelIndex.value++;
+                                gameController.currentWordIndex.value = 0;
+                                gameController.startNextWord();
+                              },
+                              child: Text('nextLevel'.tr),
+                            ),
+                          ],
+                        ),
+                      );
+                    });
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+
             ],
           ),
         ),

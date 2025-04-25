@@ -4,7 +4,7 @@ import 'package:word_search/controllers/settings_controller.dart';
 
 
 class SettingsWidget extends StatelessWidget {
-  SettingsWidget({Key? key}) : super(key: key);
+  SettingsWidget({super.key});
 
   // Retrieve or initialize the SettingsController.
   final SettingsController settingsController = Get.put(SettingsController());

@@ -5,6 +5,7 @@ import 'package:word_search/controllers/difficulty_controller.dart';
 import 'package:word_search/controllers/auth_controller.dart';
 import 'package:word_search/controllers/progress_controller.dart';
 import 'package:word_search/controllers/local_progress_controller.dart';
+import 'package:word_search/controllers/word_game_controller.dart';
 
 class InitialBindings extends Bindings {
   @override
@@ -15,5 +16,13 @@ class InitialBindings extends Bindings {
     Get.put(AuthController());
     Get.put(ProgressController());
     Get.put(LocalProgressController());
+
+    Get.put(WordGameController());
+
+
+
+
+
+
   }
 }

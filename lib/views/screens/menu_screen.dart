@@ -55,7 +55,10 @@ class MenuScreen extends StatelessWidget {
                             );
                           }
                         }),
-                        Icon(Icons.logout, size: 30,)
+                        IconButton(onPressed: (){
+                          auth.signOut();
+                          Get.offAllNamed('/');
+                          }, icon: Icon(Icons.logout, size: 30,)),
                       ],
                     ),
                   ),
@@ -165,6 +168,29 @@ class MenuScreen extends StatelessWidget {
                         child: Text('new game'.tr, style: TextStyle(
                           fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
                         ),)
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 5),
+                    width: double.infinity,
+                    height: 50,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Color(0xFFF8BD00),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black,
+                              offset: Offset(0.0, 1.0),
+                              blurRadius: 1
+                          )
+                        ]
+                    ),
+                    child: TextButton(
+                      onPressed: () {
+                        navigationController.navigateTo('/levels');
+                      },
+
+                      child: Text('levels'.tr, style: TextStyle(fontSize:25,color:Colors.black,fontWeight:FontWeight.bold)),
                     ),
                   ),
                   Container(

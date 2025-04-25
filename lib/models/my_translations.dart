@@ -24,6 +24,7 @@ class MyTranslations extends Translations {
       'nextLevel': 'Next Level',
       'well_done': 'Well done!',
       'level_complete': 'You finished level',
+      'levels' : 'Levels',
       // Add additional keys used in your UI
     },
     'ar_AE': {
@@ -47,6 +48,7 @@ class MyTranslations extends Translations {
       'nextLevel': 'المستوى التالي',
       'well_done': 'أحسنت!',
       'level_complete': 'لقد انهيت المستوى',
+      'levels' : 'المستويات',
       // And more keys for your UI...
     },
   };
