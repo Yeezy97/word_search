@@ -28,11 +28,28 @@ class ProgressController extends GetxController {
           .snapshots()
           .listen((snap) async {
         if (snap.exists) {
+          // ⬇️ if the displayName in auth doesn't match what's in Firestore, update it:
+          final currentName = u.displayName ?? '';
+          if (snap.data()!['displayName'] != currentName) {
+            await _db
+                .collection('users')
+                .doc(u.uid)
+                .set({'displayName': currentName}, SetOptions(merge: true));
+          }
+
           score.value = snap['score']  ?? 0;
           level.value = snap['level']  ?? 1;
           await _updateRank();
         } else {
-          await _db.collection('users').doc(u.uid).set({'score':0,'level':1});
+          // ⬇️ on first‐login create the document with displayName too
+          await _db
+              .collection('users')
+              .doc(u.uid)
+              .set({
+            'score': 0,
+            'level': 1,
+            'displayName': u.displayName ?? ''
+          });
         }
       });
     } else {
@@ -60,7 +77,12 @@ class ProgressController extends GetxController {
     return _db
         .collection('users')
         .doc(uid)
-        .set({'score': newScore, 'level': newLevel}, SetOptions(merge:true));
+        .set({
+      'score': newScore,
+      'level': newLevel,
+      // ⬇️ also persist displayName on each progress update
+      'displayName': user.displayName ?? ''
+    }, SetOptions(merge: true));
   }
 
   @override

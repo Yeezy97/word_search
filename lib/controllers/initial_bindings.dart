@@ -5,6 +5,7 @@ import 'package:word_search/controllers/difficulty_controller.dart';
 import 'package:word_search/controllers/auth_controller.dart';
 import 'package:word_search/controllers/progress_controller.dart';
 import 'package:word_search/controllers/local_progress_controller.dart';
+import 'package:word_search/controllers/settings_controller.dart';
 import 'package:word_search/controllers/word_game_controller.dart';
 
 class InitialBindings extends Bindings {
@@ -13,6 +14,7 @@ class InitialBindings extends Bindings {
     Get.find<SharedPreferences>();
     Get.put(NavigationController());
     Get.put(DifficultyController());
+    Get.put(SettingsController());
     Get.put(AuthController());
     Get.put(ProgressController());
     Get.put(LocalProgressController());

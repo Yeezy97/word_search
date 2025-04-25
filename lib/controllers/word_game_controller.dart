@@ -146,14 +146,21 @@ class WordGameController extends GetxController {
 
   String get maskedDisplayedWord {
     final diff = difficultyController.selectedDifficulty.value;
-    if (diff == 'Beginner') return displayedWord.value;
-    final base = sanitizedWord;
-    final flags = hiddenLetterFlags;
-    final buffer = StringBuffer();
-    for (int i = 0; i < base.length; i++) {
-      buffer.write(flags[i] ? '_' : base[i]);
+    String rawText;
+
+    if (diff == 'Beginner') {
+      rawText = displayedWord.value;
+      } else {
+      final base = sanitizedWord;
+       final buffer = StringBuffer();
+       for (int i = 0; i < base.length; i++) {
+         buffer.write(hiddenLetterFlags[i] ? '_' : base[i]);
+       }
+       rawText = buffer.toString();
     }
-    return buffer.toString();
+
+     // <<< wrap in RTL embedding so underscores don’t get reordered >>>
+    return '\u202B$rawText\u202C';
   }
 
   /// Advance to the next word in the current chapter.
@@ -179,10 +186,10 @@ class WordGameController extends GetxController {
     double fraction;
     switch (diff) {
       case 'Beginner': fraction = 0.0; break;
-      case 'Intermediate': fraction = 2 / 6; break;
-      case 'Challenger': fraction = 4 / 6; break;
+      case 'Intermediate': fraction = 3 / 6; break;
+      case 'Challenger': fraction = 5 / 6; break;
       default:
-        if (currentLevelIndex.value > 20) fraction = 4 / 6;
+        if (currentLevelIndex.value > 20) fraction = 5 / 6;
         else if (currentLevelIndex.value > 10) fraction = 3 / 6;
         else if (currentLevelIndex.value > 2) fraction = 2 / 6;
         else fraction = 0.0;

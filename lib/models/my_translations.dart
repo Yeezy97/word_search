@@ -4,6 +4,7 @@ class MyTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
     'en_US': {
+      'hello' : 'Hello, @name',
       'rank': 'Rank',
       'score': 'Score',
       'leaderboards': 'Leaderboards',
@@ -25,9 +26,30 @@ class MyTranslations extends Translations {
       'well_done': 'Well done!',
       'level_complete': 'You finished level',
       'levels' : 'Levels',
+      'word' : 'Word',
+      'definition' : 'Definition',
+      'chapter' : 'Chapter, @num',
+      'level' : 'Level',
+      'logout' : 'Logout',
+      'playAsGuest' : 'Play as Guest',
+      'signInWith' : 'Or sign in with',
+      'guestName' : 'Guest name',
+      'enter' : 'Enter',
+      'cancel': 'Cancel',
+      'enterName': 'Enter a name',
+      'progressiveDescription': 'Progressive difficulty means the player will experience more challenges as he progresses through the levels',
+      'beginnerDescription' : 'Suitable for language learners with little background in Arabic',
+      'intermediateDescription': 'Moderate difficulty with some hidden letters in the suggested words',
+      'challengerDescription' : 'For players who prefer a challenging experience where the majority of the word letters are hidden',
+      'progressive': 'Progressive Difficulty',
+      'beginner': 'Beginner',
+      'intermediate' : 'Intermediate',
+      'challenger' : 'Challenger',
+
       // Add additional keys used in your UI
     },
     'ar_AE': {
+      'hello' : 'مرحبًا, @name',
       'rank': 'الرتبة',
       'score': 'النقاط',
       'leaderboards': 'قائمة الرتب',
@@ -49,7 +71,26 @@ class MyTranslations extends Translations {
       'well_done': 'أحسنت!',
       'level_complete': 'لقد انهيت المستوى',
       'levels' : 'المستويات',
-      // And more keys for your UI...
+      'word' : 'الكلمة',
+      'definition' : 'التعريف',
+      'chapter' : 'الفصل, @num',
+      'level' : 'المستوى',
+      'logout' : 'تسجيل الخروج',
+      'playAsGuest' : 'العب كضيف',
+      'signInWith' : 'أو قم بتسجيل الدخول باستخدام',
+      'guestName' : 'اسم الضيف',
+      'enter' : 'دخول',
+      'cancel': 'إلغاء',
+      'enterName': 'أدخل اسمك',
+      'progressiveDescription': 'تعني الصعوبة المتزايدة أن اللاعب سيواجه المزيد من التحديات أثناء تقدمه عبر المستويات',
+      'beginnerDescription' : 'مناسب لمتعلمي اللغة الذين لديهم خلفية قليلة في اللغة العربية',
+      'intermediateDescription': 'صعوبة متوسطة مع وجود بعض الحروف المخفية في الكلمات المقترحة',
+      'challengerDescription' : 'للاعبين الذين يفضلون تجربة مليئة بالتحديات حيث تكون غالبية حروف الكلمات مخفية',
+      'progressive': 'الصعوبة المتزايدة',
+      'beginner': 'مبتدئ',
+      'intermediate' : 'متوسط',
+      'challenger' : 'المتحدي',
+
     },
   };
 }

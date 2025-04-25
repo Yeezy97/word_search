@@ -32,38 +32,57 @@ class MenuScreen extends StatelessWidget {
                 children: [
                   SizedBox( /// USER INFO CONTAINER
                     width: double.infinity,
-                    height: 50,
+                    height: 65,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Icon(Icons.account_circle_rounded, color: Colors.white,size: 45, ),
                         Obx(() {
-                          if (auth.isPlayingGuest) {
+                          // pick the right name
+                          final name = auth.isPlayingGuest
+                              ? (auth.guestName ?? 'Guest')
+                              : auth.isLoggedIn
+                              ? (auth.firebaseUser.value?.displayName ?? 'User')
+                              : null;
+
+                          if (name != null) {
                             return Text(
-                              'Hello ${auth.guestName ?? 'Guest'}!',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                            );
-                          } else if (auth.isLoggedIn) {
-                            return Text(
-                              'Hello ${auth.firebaseUser.value!.displayName ?? 'User'}!',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                              // ← use trParams when we have a name
+                              'hello'.trParams({'name': name}),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             );
                           } else {
                             return Text(
-                              'Hello Guest!',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                              // ← fallback for truly fresh players
+                              'hello'.tr,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             );
                           }
                         }),
-                        IconButton(onPressed: (){
-                          auth.signOut();
-                          Get.offAllNamed('/');
-                          }, icon: Icon(Icons.logout, size: 30,)),
+                        Column(
+                          children: [
+                            IconButton(
+
+                                onPressed: (){
+                              auth.signOut();
+                              Get.offAllNamed('/');
+                              }, icon: Icon(Icons.logout, size: 31,)),
+                            Text('logout'.tr, style: TextStyle(color: Color(0xFFF8BD00), fontSize: 10,)),
+                          ]
+                        ),
                       ],
                     ),
                   ),
                   Container(  /// Score/Rank
-                    margin: EdgeInsets.symmetric(vertical: 5),
+                    margin: EdgeInsets.symmetric(vertical: 15),
                     width: double.infinity,
                     height: 90,
                     decoration: BoxDecoration(
@@ -112,6 +131,13 @@ class MenuScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black,
+                          offset: Offset(0.0, 0.5),
+                          blurRadius: 1
+                        )
+                      ]
                     ),
                     child: TextButton(onPressed: (){
                       navigationController.navigateTo('/leaderboard');
@@ -124,52 +150,40 @@ class MenuScreen extends StatelessWidget {
                     )),
                   ),
                    /// LOGO
-                  Padding(padding: EdgeInsets.only(top: 10, bottom: 10),
+                  Padding(padding: EdgeInsets.only(top: 5, bottom: 5),
                     child: Image.asset('assets/images/home_logo.png',
                       height: 140,),),
-                  Container( /// MENU BUTTONS
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Color(0xFFF8BD00),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black,
-                              offset: Offset(0.0, 1.0),
-                              blurRadius: 1
-                          )
-                        ]
-                    ),
-                    child: TextButton(onPressed: (){},
-                        child: Text('continue'.tr, style: TextStyle(
-                          fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
-                        ),)
-                    ),
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Color(0xFFF8BD00),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black,
-                          offset: Offset(0.0, 1.0),
-                          blurRadius: 1
-                        )
-                      ]
-                    ),
-                    child: TextButton(onPressed: (){
-                      navigationController.navigateTo('/wordGameScreen');
-                    },
-                        child: Text('new game'.tr, style: TextStyle(
-                          fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,
-                        ),)
-                    ),
-                  ),
+                  // Dynamic New Game / Continue Button
+                  Obx(() {
+                    final int progress = auth.isLoggedIn ? cloud.level.value : local.level.value;
+                    final bool hasProgress = progress > 1;                             // <<< Check if user has played before
+                    final String label = hasProgress ? 'continue'.tr : 'new game'.tr;  // <<< Choose label dynamically
+                    return Container(
+                      margin: EdgeInsets.symmetric(vertical: 5),
+                      width: double.infinity,
+                      height: 50,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Color(0xFFF8BD00),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black,
+                                offset: Offset(0.0, 1.0),
+                                blurRadius: 1
+                            )
+                          ]
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          navigationController.navigateTo('/wordGameScreen');           // <<< Navigate to game screen
+                        },
+                        child: Text(
+                          label,                                                       // <<< Display dynamic label
+                          style: const TextStyle(fontSize: 25,color: Colors.black, fontWeight: FontWeight.bold,),
+                        ),
+                      ),
+                    );
+                  }),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 5),
                     width: double.infinity,
@@ -219,6 +233,7 @@ class MenuScreen extends StatelessWidget {
                                 margin: const EdgeInsets.symmetric(vertical: 8),
                                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                                 decoration: BoxDecoration(
+                                  color: Colors.white,
                                   border: Border.all(color: isSelected ? Colors.blue : Colors.grey),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -244,9 +259,20 @@ class MenuScreen extends StatelessWidget {
                           context: context,
                           builder: (context) {
                             return Dialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.95,
+
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Color(0xFFF7CC82),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black54,
+                                        offset: Offset(1, 1),
+                                        blurRadius: 6
+                                    )
+                                  ],
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.8,
                                 height: MediaQuery.of(context).size.height * 0.8,
                                 child: SingleChildScrollView(
                                   padding: const EdgeInsets.all(20),
@@ -259,23 +285,23 @@ class MenuScreen extends StatelessWidget {
                                               fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 20),
                                       buildOption(
+                                        'progressive'.tr,
+                                        'progressiveDescription'.tr,
                                         'Progressive Difficulty',
-                                        'Progressive difficulty means the player will experience more challenges as he progresses through the levels',
-                                        'Progressive Difficulty',
                                       ),
                                       buildOption(
-                                        'Beginner',
-                                        'Suitable for language learners with little background in Arabic',
+                                        'beginner'.tr,
+                                        'beginnerDescription'.tr,
                                         'Beginner',
                                       ),
                                       buildOption(
-                                        'Intermediate',
-                                        'Moderate difficulty with some hidden letters in the suggested words',
+                                        'intermediate'.tr,
+                                        'intermediateDescription'.tr,
                                         'Intermediate',
                                       ),
                                       buildOption(
-                                        'Challenger',
-                                        'For players who prefer a challenging experience where word definitions and the majority of the word letters are hidden',
+                                        'challenger'.tr,
+                                        'challengerDescription'.tr,
                                         'Challenger',
                                       ),
                                       const SizedBox(height: 20),
@@ -283,7 +309,9 @@ class MenuScreen extends StatelessWidget {
                                         alignment: Alignment.centerRight,
                                         child: TextButton(
                                           onPressed: () => Get.back(),
-                                          child: Text('close'.tr),
+                                          child: Text('close'.tr, style: TextStyle(
+                                            color: Colors.black,
+                                          ),),
                                         ),
                                       ),
                                     ],

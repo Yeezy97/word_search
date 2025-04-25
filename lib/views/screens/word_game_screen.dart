@@ -82,10 +82,11 @@ class WordGameScreen extends StatelessWidget {
                             },
                           ),
                           Obx(() {
+                            final chapterNumber = gameController.currentChapterNumber;
                             final levelNumber = gameController.currentLevelIndex.value + 1;
                             final wordNumber = gameController.currentWordIndex.value + 1;
                             return Text(
-                              'Level $levelNumber   Word  $wordNumber',
+                              'Chapter $chapterNumber - Level $levelNumber - Word  $wordNumber',
                               style: const TextStyle(color: Color(0xFFF8BD00), fontSize: 20),
                             );
                           }),
@@ -94,33 +95,75 @@ class WordGameScreen extends StatelessWidget {
                     ),
 
                     // Displayed Word
-                    Container(
-                      width: screenWidth,
-                      height: 50,
-                      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                      child: Center(
-                        child: Obx(() => Text(
-                          gameController.maskedDisplayedWord,
-                          style: const TextStyle(fontSize: 30, color: Color(0xFFF8BD00)),
-                        )),
-                      ),
+                    Stack(
+                      children: [
+                        Container(
+                          width: screenWidth,
+                          height: 50,
+                          margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                          child: Center(
+                            child: Obx(() => Text(
+                              gameController.maskedDisplayedWord,
+                              style: const TextStyle(fontSize: 30, color: Color(0xFFF8BD00)),
+                            )),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,      // lift it above the top border
+                          left: 0, right: 0,
+                          child: Center(
+                            child: Container(
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)), // match your container’s background
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                'word'.tr,
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     // Definition (RTL)
-                    Directionality(
-                      textDirection: TextDirection.rtl,
-                      child: Container(
-                        width: screenWidth,
-                        height: 120,
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                        child: Obx(() => Text(
-                          gameController.displayedDefinition.value,
-                          style: const TextStyle(fontSize: 15),
-                        )),
-                      ),
+                    Stack(
+                      children: [
+                        Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Container(
+                            width: screenWidth,
+                            height: 120,
+                            padding: const EdgeInsets.all(8),
+                            margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                            child: Obx(() => SingleChildScrollView(
+                              child: Text(
+                                gameController.displayedDefinition.value,
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            )),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          left: 0, right: 0,
+                          child: Center(
+                            child: Container(
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                'definition'.tr,
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     // Randomly positioned letter boxes
@@ -246,11 +289,14 @@ class WordGameScreen extends StatelessWidget {
               // Level-complete dialog (unchanged)
               GetX<WordGameController>(
                 builder: (_) {
-                  if (gameController.levelCompleted.value) {
-                    gameController.levelCompleted.value = false;
+                  if (gameController.levelCompleted.value && !(Get.isDialogOpen ?? false)) {
                     Future.microtask(() {
+                      gameController.levelCompleted.value = false;
                       Get.dialog(
                         AlertDialog(
+                          backgroundColor: Color(0xFFF7CC82),
+                          elevation: 5,
+                          shadowColor: Colors.black54,
                           title: Text('well_done'.tr),
                           content: Text('level_complete'.trParams({
                             'level': '${gameController.currentLevelIndex.value + 1}'
