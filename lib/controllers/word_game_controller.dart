@@ -223,6 +223,9 @@ class WordGameController extends GetxController {
 
     final int count = sanitizedWord.length;
     final random = Random();
+
+      // Reserves pad pixels on all sides so boxes never butt right up against the edge.
+      // Subtracts a full letterBoxSize so the box’s far edge also stays inside.
     final pad = boxContainerPadding;
     final widthLimit = lastBoxContainerWidth - pad * 2 - letterBoxSize;
     final heightLimit = boxContainerHeight    - pad * 2 - letterBoxSize;
@@ -236,6 +239,8 @@ class WordGameController extends GetxController {
       // <<< clamp so the box never gets closer than 'pad' to any border
       x = x.clamp(pad, pad + widthLimit)         as double;
       y = y.clamp(pad, pad + heightLimit)        as double;
+
+      // For each new candidate (x,y), compare its bounding box against all previously accepted positions. Reject it if any overlap is detected.
 
       final rect = Rect.fromLTWH(x, y, letterBoxSize, letterBoxSize);
       final overlap = positions.any((existing) =>

@@ -86,7 +86,7 @@ class WordGameScreen extends StatelessWidget {
                             final levelNumber = gameController.currentLevelIndex.value + 1;
                             final wordNumber = gameController.currentWordIndex.value + 1;
                             return Text(
-                              'Chapter $chapterNumber - Level $levelNumber - Word  $wordNumber',
+                              '${'chapter'.tr} $chapterNumber - ${'level'.tr} $levelNumber - ${'word'.tr} $wordNumber',
                               style: const TextStyle(color: Color(0xFFF8BD00), fontSize: 20),
                             );
                           }),

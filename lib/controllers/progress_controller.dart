@@ -28,7 +28,7 @@ class ProgressController extends GetxController {
           .snapshots()
           .listen((snap) async {
         if (snap.exists) {
-          // ⬇️ if the displayName in auth doesn't match what's in Firestore, update it:
+          // if the displayName in auth doesn't match what's in Firestore, update it:
           final currentName = u.displayName ?? '';
           if (snap.data()!['displayName'] != currentName) {
             await _db
@@ -41,7 +41,7 @@ class ProgressController extends GetxController {
           level.value = snap['level']  ?? 1;
           await _updateRank();
         } else {
-          // ⬇️ on first‐login create the document with displayName too
+          // on first‐login create the document with displayName, score and level
           await _db
               .collection('users')
               .doc(u.uid)
@@ -80,7 +80,7 @@ class ProgressController extends GetxController {
         .set({
       'score': newScore,
       'level': newLevel,
-      // ⬇️ also persist displayName on each progress update
+      //  persist displayName on each progress update
       'displayName': user.displayName ?? ''
     }, SetOptions(merge: true));
   }

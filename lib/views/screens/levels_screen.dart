@@ -54,7 +54,7 @@ class LevelsScreen extends StatelessWidget {
               return ExpansionTile(
                 initiallyExpanded: chapterIndex == 0,
                 title: Text(
-                  'chapter'.trParams({'num': '${chapterIndex + 1}'}),
+                  '${'chapter'.tr} ${chapterIndex + 1}',
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black
                   ),
