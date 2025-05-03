@@ -71,8 +71,8 @@ class WordGameScreen extends StatelessWidget {
                                     TextButton(onPressed: () => Get.back(), child: Text('no'.tr)),
                                     TextButton(
                                       onPressed: () {
-                                        Get.back();
-                                        navigationController.navigateTo('/menuScreen');
+                                        Get.back(); // close the dialog
+                                        Get.offNamed('/menuScreen');
                                       },
                                       child: Text('yes'.tr),
                                     ),
@@ -243,7 +243,7 @@ class WordGameScreen extends StatelessWidget {
                                   onAcceptWithDetails: (details) => gameController.placeLetterInTarget(ti, details.data),
                                   builder: (_, __, ___) {
                                     return Obx(() => AnimatedContainer(
-                                      duration: const Duration(milliseconds: 500),
+                                      duration: const Duration(milliseconds: 400),
                                       width: gameController.letterBoxSize,
                                       height: gameController.letterBoxSize,
                                       decoration: BoxDecoration(
@@ -298,9 +298,8 @@ class WordGameScreen extends StatelessWidget {
                           elevation: 5,
                           shadowColor: Colors.black54,
                           title: Text('well_done'.tr),
-                          content: Text('level_complete'.trParams({
-                            'level': '${gameController.currentLevelIndex.value + 1}'
-                          })),
+                          content: Text('${'level_complete'.tr} ${gameController.currentLevelIndex.value + 1}'
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () {
@@ -313,7 +312,18 @@ class WordGameScreen extends StatelessWidget {
                             TextButton(
                               onPressed: () {
                                 Get.back();
+                                // advance to next level
                                 gameController.currentLevelIndex.value++;
+                                // persist that new level
+                                if (gameController.authController.isLoggedIn) {
+                                  gameController.cloudProgressController.updateProgress(
+                                      newLevel: gameController.currentLevelIndex.value + 1
+                                  );
+                                } else if (gameController.authController.isPlayingGuest) {
+                                  gameController.guestProgressController.updateLocalProgress(
+                                      newLevel: gameController.currentLevelIndex.value + 1
+                                  );
+                                }
                                 gameController.currentWordIndex.value = 0;
                                 gameController.startNextWord();
                               },

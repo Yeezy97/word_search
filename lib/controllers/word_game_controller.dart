@@ -14,7 +14,8 @@ class WordGameController extends GetxController {
   static const int wordsPerLevel = 5;
   static const int levelsPerChapter = 100;
   static const int wordsPerChapter = wordsPerLevel * levelsPerChapter;
-  static final RegExp _arabicDiacritics = RegExp(r'[\u064B-\u065F\u0670\u06D6-\u06ED]');
+  static final RegExp _arabicDiacritics = RegExp(
+      r'[\u064B-\u065F\u0670\u06D6-\u06ED]');
 
   // Controllers
   final DifficultyController difficultyController = Get.find();
@@ -58,7 +59,8 @@ class WordGameController extends GetxController {
   int get totalChaptersCount => (totalLevelsCount / levelsPerChapter).ceil();
 
   /// One-based current chapter number for UI.
-  int get currentChapterNumber => (currentLevelIndex.value ~/ levelsPerChapter) + 1;
+  int get currentChapterNumber =>
+      (currentLevelIndex.value ~/ levelsPerChapter) + 1;
 
   /// One-based current level number for UI.
   int get currentLevelNumber => currentLevelIndex.value + 1;
@@ -107,8 +109,10 @@ class WordGameController extends GetxController {
   }
 
   Future<void> _loadCsvData() async {
-    final dataString = await rootBundle.loadString('assets/data/arabic_nouns.csv');
+    var dataString = await rootBundle.loadString(
+        'assets/data/arabic_nouns.csv');
     final rows = const CsvToListConverter().convert(dataString);
+    print('[CSV ROWS] count=${rows.length}');
     _allCsvRows = rows.length > 1 ? rows.sublist(1) : [];
     print('[CSV] Loaded total entries: ${_allCsvRows.length}');
   }
@@ -126,7 +130,8 @@ class WordGameController extends GetxController {
       );
     }).toList();
     _chapterCache[chapterIndex] = entries;
-    print('[CSV] Cached chapter ${chapterIndex + 1} with ${entries.length} entries');
+    print('[CSV] Cached chapter ${chapterIndex + 1} with ${entries
+        .length} entries');
   }
 
   /// Prepare level list for a chapter.
@@ -139,10 +144,12 @@ class WordGameController extends GetxController {
       levels.add(allEntries.sublist(i, end));
     }
     final computedLevels = (allEntries.length / wordsPerLevel).ceil();
-    print('[CSV] Prepared $computedLevels levels for chapter ${chapterIndex + 1}');
+    print('[CSV] Prepared $computedLevels levels for chapter ${chapterIndex +
+        1}');
   }
 
-  String get sanitizedWord => displayedWord.value.replaceAll(_arabicDiacritics, '');
+  String get sanitizedWord =>
+      displayedWord.value.replaceAll(_arabicDiacritics, '');
 
   String get maskedDisplayedWord {
     final diff = difficultyController.selectedDifficulty.value;
@@ -150,16 +157,16 @@ class WordGameController extends GetxController {
 
     if (diff == 'Beginner') {
       rawText = displayedWord.value;
-      } else {
+    } else {
       final base = sanitizedWord;
-       final buffer = StringBuffer();
-       for (int i = 0; i < base.length; i++) {
-         buffer.write(hiddenLetterFlags[i] ? '_' : base[i]);
-       }
-       rawText = buffer.toString();
+      final buffer = StringBuffer();
+      for (int i = 0; i < base.length; i++) {
+        buffer.write(hiddenLetterFlags[i] ? '_' : base[i]);
+      }
+      rawText = buffer.toString();
     }
 
-     // <<< wrap in RTL embedding so underscores don’t get reordered >>>
+    // <<< wrap in RTL embedding so underscores don’t get reordered >>>
     return '\u202B$rawText\u202C';
   }
 
@@ -173,6 +180,7 @@ class WordGameController extends GetxController {
     final entry = levels[levelIndex % levelsPerChapter][currentWordIndex.value];
     displayedWord.value = entry.lemma;
     displayedDefinition.value = entry.definition;
+
     computeHiddenLetterFlags();
     resetPlacementState();
     generateLetterBoxes();
@@ -185,14 +193,24 @@ class WordGameController extends GetxController {
     final diff = difficultyController.selectedDifficulty.value;
     double fraction;
     switch (diff) {
-      case 'Beginner': fraction = 0.0; break;
-      case 'Intermediate': fraction = 3 / 6; break;
-      case 'Challenger': fraction = 5 / 6; break;
+      case 'Beginner':
+        fraction = 0.0;
+        break;
+      case 'Intermediate':
+        fraction = 3 / 6;
+        break;
+      case 'Challenger':
+        fraction = 5 / 6;
+        break;
       default:
-        if (currentLevelIndex.value > 20) fraction = 5 / 6;
-        else if (currentLevelIndex.value > 10) fraction = 3 / 6;
-        else if (currentLevelIndex.value > 2) fraction = 2 / 6;
-        else fraction = 0.0;
+        if (currentLevelIndex.value > 20)
+          fraction = 5 / 6;
+        else if (currentLevelIndex.value > 10)
+          fraction = 3 / 6;
+        else if (currentLevelIndex.value > 2)
+          fraction = 2 / 6;
+        else
+          fraction = 0.0;
     }
     int hideCount = (length * fraction).floor();
     if (length.isOdd && hideCount > 0) hideCount--;
@@ -202,7 +220,8 @@ class WordGameController extends GetxController {
     while (chosen.length < hideCount && chosen.length < length) {
       chosen.add(random.nextInt(length));
     }
-    for (final idx in chosen) hiddenLetterFlags[idx] = true;
+    for (final idx in chosen)
+      hiddenLetterFlags[idx] = true;
   }
 
   void resetPlacementState() {
@@ -215,20 +234,20 @@ class WordGameController extends GetxController {
   }
 
   void generateLetterBoxes() {
-      //  if we haven’t yet measured the parent width, skip layout entirely
-      if (lastBoxContainerWidth <= 0) {
-        letterBoxPositions.clear();
-        return;
-      }
+    //  if we haven’t yet measured the parent width, skip layout entirely
+    if (lastBoxContainerWidth <= 0) {
+      letterBoxPositions.clear();
+      return;
+    }
 
     final int count = sanitizedWord.length;
     final random = Random();
 
-      // Reserves pad pixels on all sides so boxes never butt right up against the edge.
-      // Subtracts a full letterBoxSize so the box’s far edge also stays inside.
+    // Reserves pad pixels on all sides so boxes never butt right up against the edge.
+    // Subtracts a full letterBoxSize so the box’s far edge also stays inside.
     final pad = boxContainerPadding;
     final widthLimit = lastBoxContainerWidth - pad * 2 - letterBoxSize;
-    final heightLimit = boxContainerHeight    - pad * 2 - letterBoxSize;
+    final heightLimit = boxContainerHeight - pad * 2 - letterBoxSize;
 
     final positions = <Offset>[];
     int attempts = 0;
@@ -237,8 +256,8 @@ class WordGameController extends GetxController {
       double y = pad + random.nextDouble() * heightLimit;
 
       // <<< clamp so the box never gets closer than 'pad' to any border
-      x = x.clamp(pad, pad + widthLimit)         as double;
-      y = y.clamp(pad, pad + heightLimit)        as double;
+      x = x.clamp(pad, pad + widthLimit) as double;
+      y = y.clamp(pad, pad + heightLimit) as double;
 
       // For each new candidate (x,y), compare its bounding box against all previously accepted positions. Reject it if any overlap is detected.
 
@@ -290,30 +309,39 @@ class WordGameController extends GetxController {
   /// Confirm user answer and advance
   Future<void> confirmUserAnswer() async {
     if (lettersInTargets.contains(null)) return;
-    if (lettersInTargets.join().toLowerCase() ==
-        sanitizedWord.toLowerCase()) {
+    final attempt = lettersInTargets.join().toLowerCase();
+
+    if (attempt == sanitizedWord.toLowerCase()) {
+      // 1) Light it up green on the *current* word:
       targetHighlightColor.value = Colors.green;
+      update();
+
+      // 2) Hold the green highlight:
       await Future.delayed(const Duration(milliseconds: 500));
-      if (authController.isLoggedIn) {
-        await cloudProgressController.updateProgress(
-            newLevel: currentLevelIndex.value + 1);
-      } else if (authController.isPlayingGuest) {
-        guestProgressController.updateLocalProgress(
-            newLevel: currentLevelIndex.value + 1);
-      }
+
+      // 3) Fade back to transparent:
+      targetHighlightColor.value = Colors.transparent;
+      update();
+
+      // 4) Give the fade a moment to finish:
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // 5) Now advance
       if (currentWordIndex.value < wordsPerLevel - 1) {
         currentWordIndex.value++;
-        await startNextWord();
+        startNextWord();
       } else {
         levelCompleted.value = true;
       }
     } else {
+      // Wrong answer – quick red flash then reset
       targetHighlightColor.value = Colors.red;
+      update();
       await Future.delayed(const Duration(milliseconds: 500));
+
       resetPlacementState();
       generateLetterBoxes();
     }
-    targetHighlightColor.value = Colors.transparent;
-    update();
   }
+
 }
