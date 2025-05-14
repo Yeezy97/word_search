@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:word_search/controllers/auth_controller.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -131,6 +130,7 @@ class HomeScreen extends StatelessWidget {
                     onPressed: () {
                       final ctrl = TextEditingController();
                       Get.dialog(
+                        barrierDismissible: false,
                         AlertDialog(
                           title:  Text('enterName'.tr),
                           content: TextField(
@@ -152,7 +152,7 @@ class HomeScreen extends StatelessWidget {
                                   Get.back(); // close dialog
                                   Get.toNamed(
                                     '/menuScreen',
-                                  ); // navigate only here
+                                  ); // navigate only when a valid name was entered
                                 }
                               },
                               child:  Text('enter'.tr),

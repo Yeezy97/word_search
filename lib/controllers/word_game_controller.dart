@@ -166,7 +166,7 @@ class WordGameController extends GetxController {
       rawText = buffer.toString();
     }
 
-    // <<< wrap in RTL embedding so underscores don’t get reordered >>>
+    //  wrap in RTL embedding so underscores don’t get reordered
     return '\u202B$rawText\u202C';
   }
 
@@ -255,7 +255,7 @@ class WordGameController extends GetxController {
       double x = pad + random.nextDouble() * widthLimit;
       double y = pad + random.nextDouble() * heightLimit;
 
-      // <<< clamp so the box never gets closer than 'pad' to any border
+      //  clamp so the box never gets closer than 'pad' to any border
       x = x.clamp(pad, pad + widthLimit) as double;
       y = y.clamp(pad, pad + heightLimit) as double;
 
@@ -312,21 +312,21 @@ class WordGameController extends GetxController {
     final attempt = lettersInTargets.join().toLowerCase();
 
     if (attempt == sanitizedWord.toLowerCase()) {
-      // 1) Light it up green on the *current* word:
+      // Light it up green on the *current* word:
       targetHighlightColor.value = Colors.green;
       update();
 
-      // 2) Hold the green highlight:
+      // Hold the green highlight:
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // 3) Fade back to transparent:
+      // Fade back to transparent:
       targetHighlightColor.value = Colors.transparent;
       update();
 
-      // 4) Give the fade a moment to finish:
+      // Give the fade a moment to finish:
       await Future.delayed(const Duration(milliseconds: 300));
 
-      // 5) Now advance
+      // Now advance
       if (currentWordIndex.value < wordsPerLevel - 1) {
         currentWordIndex.value++;
         startNextWord();

@@ -9,7 +9,7 @@ final regex = RegExp(
 Future<void> main() async {
   final inFile = File('alwassit.sql');
   if (!await inFile.exists()) {
-    print('❌ alwassit.sql not found in project root.');
+    print('alwassit not found in project root.');
     return;
   }
   final contents = await inFile.readAsString();
@@ -23,5 +23,5 @@ Future<void> main() async {
     outFile.writeln('"$lemma","$def"');
   }
   await outFile.close();
-  print('✅ Extracted ${regex.allMatches(contents).length} rows to arabic_nouns.csv');
+  print('Extracted ${regex.allMatches(contents).length} rows to arabic_nouns.csv');
 }

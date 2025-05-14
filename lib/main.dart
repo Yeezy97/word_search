@@ -20,8 +20,9 @@ Future<void> main() async {
 
   // Determine starting route
   final firebaseUser = FirebaseAuth.instance.currentUser;
-  final hasGuestName = prefs.getString('guest_name') != null;
-  final String initialRoute = (firebaseUser != null || hasGuestName)
+  final guestName = prefs.getString('guest_name') ?? '';
+  final bool hasGuest = guestName.isNotEmpty;
+  final String initialRoute = (firebaseUser != null || hasGuest)
       ? '/menuScreen'
       : '/';
 

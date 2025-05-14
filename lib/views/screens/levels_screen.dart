@@ -1,4 +1,3 @@
-// … other imports …
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:word_search/controllers/word_game_controller.dart';

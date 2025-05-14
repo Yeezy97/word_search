@@ -46,7 +46,6 @@ class MyTranslations extends Translations {
       'intermediate' : 'Intermediate',
       'challenger' : 'Challenger',
 
-      // Add additional keys used in your UI
     },
     'ar_AE': {
       'hello' : 'مرحبًا, @name',

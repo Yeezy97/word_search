@@ -110,7 +110,7 @@ class WordGameScreen extends StatelessWidget {
                           ),
                         ),
                         Positioned(
-                          top: 10,      // lift it above the top border
+                          top: 10,
                           left: 0, right: 0,
                           child: Center(
                             child: Container(
@@ -182,9 +182,9 @@ class WordGameScreen extends StatelessWidget {
                           }
                           return Stack(
                             children: List.generate(letterCount, (i) {
-                              // ◀ wrap each in its own Obx
+                              // wrap each in its own Obx
                               return Obx(() {
-                                // ◀ if already placed, draw nothing
+                                // if already placed, draw nothing
                                 if (gameController.isLetterBoxPlaced[i]) {
                                   return const SizedBox();
                                 }
@@ -218,7 +218,7 @@ class WordGameScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Drop targets & confirm button (unchanged)
+                    // Drop targets & confirm button
                     Obx(() {
                       final length = gameController.sanitizedWord.length;
                       if (gameController.lettersInTargets.length != length) {
@@ -286,13 +286,14 @@ class WordGameScreen extends StatelessWidget {
                 ),
               ),
 
-              // Level-complete dialog (unchanged)
+              // Level-complete dialog
               GetX<WordGameController>(
                 builder: (_) {
                   if (gameController.levelCompleted.value && !(Get.isDialogOpen ?? false)) {
                     Future.microtask(() {
                       gameController.levelCompleted.value = false;
                       Get.dialog(
+                        barrierDismissible: false,
                         AlertDialog(
                           backgroundColor: Color(0xFFF7CC82),
                           elevation: 5,

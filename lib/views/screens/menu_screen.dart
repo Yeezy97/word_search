@@ -18,6 +18,14 @@ class MenuScreen extends StatelessWidget {
     final local = Get.find<LocalProgressController>();
     final NavigationController navigationController = Get.find<NavigationController>();
     final DifficultyController difficultyController = Get.find<DifficultyController>();
+
+    // if neither guest nor google, bounce back to home
+    if (!auth.isPlayingGuest && !auth.isLoggedIn){
+      // widget binding to schedule for after the build
+      WidgetsBinding.instance.addPostFrameCallback((_){
+        Get.offAllNamed('/');
+      });
+    }
     return Scaffold(
       body: SafeArea(
           child: Container(
@@ -45,9 +53,8 @@ class MenuScreen extends StatelessWidget {
                               ? (auth.firebaseUser.value?.displayName ?? 'User')
                               : null;
 
-                          if (name != null) {
+                          if (name != null && name.isNotEmpty) {
                             return Text(
-                              // ← use trParams when we have a name
                               'hello'.trParams({'name': name}),
                               style: TextStyle(
                                 fontSize: 20,
@@ -55,22 +62,12 @@ class MenuScreen extends StatelessWidget {
                                 color: Colors.white,
                               ),
                             );
-                          } else {
-                            return Text(
-                              // ← fallback for truly fresh players
-                              'hello'.tr,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            );
                           }
+                          return const SizedBox.shrink();
                         }),
                         Column(
                           children: [
                             IconButton(
-
                                 onPressed: (){
                               auth.signOut();
                               Get.offAllNamed('/');
